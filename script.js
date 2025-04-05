@@ -2,9 +2,10 @@ let map;
 let markers = [];
 let currentLayer = "town";
 
+// 你會換成你真實的表單 Sheet ID
 const SHEET_ID = '1IapOBmEDnMok0a1qhwGhusfs9Li2AOdhvfCM_VF7c8Y';  // 👈 你之後換掉
 const SHEET_NAME = "Tint.Maps";
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}`;
 
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
@@ -18,11 +19,6 @@ function initMap() {
   loadLayer("town");
 }
 
-function switchLayer(layer) {
-  currentLayer = layer;
-  loadLayer(layer);
-}
-
 function clearMarkers() {
   markers.forEach(m => m.setMap(null));
   markers = [];
@@ -32,12 +28,18 @@ function getSelectedValues(className) {
   return Array.from(document.querySelectorAll(`.${className}:checked`)).map(i => i.value.trim());
 }
 
+function switchLayer(layer) {
+  currentLayer = layer;
+  loadLayer(layer);
+}
+
 function loadLayer(layer) {
   clearMarkers();
+
   fetch(SHEET_URL)
     .then(res => res.text())
-    .then(txt => {
-      const json = JSON.parse(txt.substr(47).slice(0, -2));
+    .then(data => {
+      const json = JSON.parse(data.substr(47).slice(0, -2));
       const rows = json.table.rows;
 
       const selectedTags = getSelectedValues("type-filter");
@@ -45,18 +47,39 @@ function loadLayer(layer) {
       const now = new Date();
 
       rows.forEach(row => {
-        const data = row.c.map(c => (c ? c.v : ""));
-        const [name, link, type, tags, desc, latlng, address, due, rowLayer] = data;
-        if (rowLayer !== layer) return;
-        if (!latlng || !latlng.includes(",")) return;
+        const role = row.c[0]?.v?.trim() || "";
+        const name = row.c[1]?.v || "";
+        const link = row.c[2]?.v || "";
+        const type = row.c[3]?.v || "";
+        const tags = row.c[4]?.v || "";
+        const desc = row.c[5]?.v || "";
+        const offerType = row.c[6]?.v || "";
+        const due = row.c[7]?.v || "";
+        const latlng = row.c[8]?.v || "";
+        const address = row.c[9]?.v || "";
+
+        if (!latlng.includes(",")) return;
         const [lat, lng] = latlng.split(",").map(Number);
 
-        // 篩選
-        const tagList = (tags || "").split(/,|、/).map(t => t.trim());
-        if (layer === "town" && !tagList.some(t => selectedTags.includes(t))) return;
-        if (layer === "model") {
-          if (!tagList.some(t => selectedOffers.includes(t))) return;
-          if (due && new Date(due) < now) return;
+        // 層級過濾
+        if ((layer === "town" && role !== "店家") ||
+            (layer === "model" && role !== "Model") ||
+            (layer === "rent" && role !== "房源")) return;
+
+        // 類型過濾（如：美甲、美睫）
+        const tagList = tags.split(/,|、/).map(t => t.trim());
+        const matchTags = tagList.some(t => selectedTags.includes(t));
+        if (layer === "town" && !matchTags) return;
+
+        // 互惠/付費過濾
+        const offerList = offerType.split(/,|、/).map(t => t.trim());
+        const matchOffer = offerList.some(t => selectedOffers.includes(t));
+        if (layer === "model" && selectedOffers.length && !matchOffer) return;
+
+        // 自動下架過期
+        if (layer === "model" && due) {
+          const dueDate = new Date(due);
+          if (dueDate < now) return;
         }
 
         const marker = new google.maps.Marker({ position: { lat, lng }, map, title: name });
@@ -67,7 +90,8 @@ function loadLayer(layer) {
               <em>${type}</em><br/>
               ${tags}<br/>
               ${desc}<br/>
-              ${due ? `<small>⏰ 截止：${due}</small><br/>` : ""}
+              ${offerType ? `📌 ${offerType}<br/>` : ""}
+              ${due ? `⏰ 截止：${due}<br/>` : ""}
               <a href="${link}" target="_blank">🔗 點我看連結</a><br/>
               <small>${address}</small>
             </div>
