@@ -3,7 +3,7 @@ let markers = [];
 let currentLayer = "town";
 
 const SHEET_ID = '1i31bdyzutx_67rWCaIgJl7Ir8-FD3mqVeYXk_haEgqM';
-const SHEET_NAME = 'TintTown';
+const SHEET_NAME = '🟧 Tint Town 表單（正式上架）';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}`;
 
 // 👇 加入徵 model 有效日期、招募類型（互惠/付費）
