@@ -1,0 +1,16 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  background: #fffaf8;
+}
+
+#map {
+  height: 100%;
+  width: 100%;
+}
+
+.gm-style .gm-style-iw {
+  font-size: 14px;
+  line-height: 1.6;
+}
