@@ -1,16 +1,45 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tint Town 美業地圖</title>
-    <link rel="stylesheet" href="style.css" />
+    <meta charset="utf-8" />
+    <title>Tint Map | Multi-Layer</title>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        font-family: sans-serif;
+      }
+      #tabs {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 10;
+      }
+      #tabs button {
+        margin: 0 4px;
+        padding: 6px 12px;
+        border: none;
+        background: #222;
+        color: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
   </head>
   <body>
+    <div id="tabs">
+      <button onclick="switchLayer('town')">Tint Town</button>
+      <button onclick="switchLayer('model')">Tint Model</button>
+      <button onclick="switchLayer('rent')">Tint Rent</button>
+    </div>
     <div id="map"></div>
 
     <script src="script.js"></script>
-    <script async
+    <script async defer
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap">
     </script>
   </body>
