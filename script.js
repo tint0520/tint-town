@@ -3,7 +3,7 @@ let markers = [];
 
 const SHEET_ID = '1i31bdyzutx_67rWCaIgJl7Ir8-FD3mqVeYXk_haEgqM';
 const SHEET_NAME = '🟧 Tint Town 表單（正式上架）';
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_NAME}`;
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}`;
 
 const extraLayers = {
   model: [
@@ -35,7 +35,16 @@ function initMap() {
     center: { lat: 25.0330, lng: 121.5654 },
     zoom: 13,
   });
-  loadLayer("town");
+
+  // 綁定篩選器更新
+  const filters = document.querySelectorAll('#filter-box input[type="checkbox"]');
+  filters.forEach(input => {
+    input.addEventListener('change', () => {
+      switchLayer('town');
+    });
+  });
+
+  loadLayer('town'); // 預設載入
 }
 
 function clearMarkers() {
@@ -43,14 +52,22 @@ function clearMarkers() {
   markers = [];
 }
 
-function switchLayer(layer) {
+function getSelectedTags() {
+  const checked = document.querySelectorAll('#filter-box input[type="checkbox"]:checked');
+  return Array.from(checked).map(i => i.value.trim());
+}
+
+function loadLayer(layer) {
   clearMarkers();
+
   if (layer === "town") {
     fetch(SHEET_URL)
       .then(res => res.text())
       .then(data => {
         const json = JSON.parse(data.substr(47).slice(0, -2));
         const rows = json.table.rows;
+        const selectedTags = getSelectedTags();
+
         rows.forEach(row => {
           const name = row.c[0]?.v || "";
           const link = row.c[1]?.v || "";
@@ -62,6 +79,10 @@ function switchLayer(layer) {
 
           if (!latlng.includes(",")) return;
           const [lat, lng] = latlng.split(",").map(Number);
+
+          const tagList = tags.split(/,|、/).map(t => t.trim());
+          const matched = tagList.some(t => selectedTags.includes(t));
+          if (!matched) return;
 
           const marker = new google.maps.Marker({
             position: { lat, lng },
@@ -116,4 +137,8 @@ function switchLayer(layer) {
       markers.push(marker);
     });
   }
+}
+
+function switchLayer(layer) {
+  loadLayer(layer);
 }
