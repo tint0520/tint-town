@@ -2,7 +2,7 @@ let map;
 let markers = [];
 
 const SHEET_ID = '1i31bdyzutx_67rWCaIgJl7Ir8-FD3mqVeYXk_haEgqM';
-const SHEET_NAME = 'clean_data';
+const SHEET_NAME = '🟧 Tint Town 表單（正式上架）';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_NAME}`;
 
 const extraLayers = {
