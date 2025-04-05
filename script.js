@@ -1,4 +1,4 @@
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/你的sheet連結/gviz/tq?tqx=out:json";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1i31bdyzutx_67rWCaIgJl7Ir8-FD3mqVeYXk_haEgqM/gviz/tq?tqx=out:json";
 
 // 這裡自己換成你有設「公開成 JSON 的」Google Sheet 網址，不然沒資料跑出來
 
