@@ -1,4 +1,4 @@
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/1FAIpQLSeV1IPI_xuS7j3edFxRbyP9CJzgCKQ5Zn6TuJmrZcYK0VBxIQ/gviz/tq?tqx=out:json";
+const SHEET_URL = '你的 JSON 來源網址（不能用 gsheet 編輯網址）';
 
 async function initMap() {
   const map = new google.maps.Map(document.getElementById("map"), {
@@ -19,19 +19,19 @@ async function initMap() {
     const address = row.c[9]?.v || "";
 
     if (!latlng) return;
+
     const [lat, lng] = latlng.split(",").map(Number);
+
     const marker = new google.maps.Marker({
       position: { lat, lng },
       map,
       title: name,
     });
 
-    const infoWindow = new google.maps.InfoWindow({
-      content: `<strong>${name}</strong><br>${desc}<br><a href="${link}" target="_blank">${link}</a><br>${address}`,
+    const info = new google.maps.InfoWindow({
+      content: `<strong>${name}</strong><br>${desc}<br><a href="${link}" target="_blank">點我聯絡</a><br>${address}`,
     });
 
-    marker.addListener("click", () => {
-      infoWindow.open(map, marker);
-    });
+    marker.addListener("click", () => info.open(map, marker));
   });
 }
