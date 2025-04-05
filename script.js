@@ -1,8 +1,10 @@
-const SHEET_URL = '你的 JSON 來源網址（不能用 gsheet 編輯網址）';
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/你的sheet連結/gviz/tq?tqx=out:json";
+
+// 這裡自己換成你有設「公開成 JSON 的」Google Sheet 網址，不然沒資料跑出來
 
 async function initMap() {
   const map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 25.034, lng: 121.564 },
+    center: { lat: 25.034, lng: 121.564 }, // 預設台北
     zoom: 12,
   });
 
@@ -21,17 +23,27 @@ async function initMap() {
     if (!latlng) return;
 
     const [lat, lng] = latlng.split(",").map(Number);
-
     const marker = new google.maps.Marker({
       position: { lat, lng },
       map,
       title: name,
     });
 
-    const info = new google.maps.InfoWindow({
-      content: `<strong>${name}</strong><br>${desc}<br><a href="${link}" target="_blank">點我聯絡</a><br>${address}`,
+    const infowindow = new google.maps.InfoWindow({
+      content: `
+        <div>
+          <strong>${name}</strong><br>
+          ${desc}<br>
+          <a href="${link}" target="_blank">更多資訊</a><br>
+          <small>${address}</small>
+        </div>
+      `
     });
 
-    marker.addListener("click", () => info.open(map, marker));
+    marker.addListener("click", () => {
+      infowindow.open(map, marker);
+    });
   });
 }
+
+window.initMap = initMap;
