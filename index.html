@@ -1,84 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
   <head>
-    <meta charset="utf-8" />
-    <title>Tint Map | Multi-Layer</title>
-    <style>
-      html, body {
-        height: 100%;
-        margin: 0;
-        font-family: sans-serif;
-      }
-      #tabs {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        z-index: 10;
-      }
-      #tabs button {
-        margin: 0 4px;
-        padding: 6px 12px;
-        border: none;
-        background: #222;
-        color: #fff;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      #filter-box {
-        position: absolute;
-        top: 60px;
-        left: 10px;
-        z-index: 10;
-        background: rgba(255, 255, 255, 0.95);
-        padding: 10px;
-        border-radius: 6px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        font-size: 14px;
-        max-height: 300px;
-        overflow-y: auto;
-        width: 180px;
-      }
-      #map {
-        width: 100%;
-        height: 100%;
-      }
-    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tint Town 美業地圖</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div id="tabs">
-      <button onclick="switchLayer('town')">Tint Town</button>
-      <button onclick="switchLayer('model')">Tint Model</button>
-      <button onclick="switchLayer('rent')">Tint Rent</button>
-    </div>
-
-    <!-- ✅ 合體篩選器 -->
-    <div id="filter-box">
-      <strong>篩選類型：</strong><br>
-      <label><input type="checkbox" class="type-filter" value="美甲" checked> 美甲</label><br>
-      <label><input type="checkbox" class="type-filter" value="美睫" checked> 美睫</label><br>
-      <label><input type="checkbox" class="type-filter" value="紋繡" checked> 紋繡</label><br>
-      <label><input type="checkbox" class="type-filter" value="皮膚管理" checked> 皮膚管理</label><br>
-      <label><input type="checkbox" class="type-filter" value="美容護膚" checked> 美容護膚</label><br>
-      <label><input type="checkbox" class="type-filter" value="美髮" checked> 美髮</label><br>
-      <label><input type="checkbox" class="type-filter" value="按摩" checked> 按摩</label><br>
-      <label><input type="checkbox" class="type-filter" value="芳療" checked> 芳療</label><br>
-      <label><input type="checkbox" class="type-filter" value="SPA" checked> SPA</label><br>
-      <label><input type="checkbox" class="type-filter" value="整體造型" checked> 整體造型</label><br>
-      <label><input type="checkbox" class="type-filter" value="彩妝" checked> 彩妝</label><br>
-      <label><input type="checkbox" class="type-filter" value="翹睫管理" checked> 翹睫管理</label><br>
-      <label><input type="checkbox" class="type-filter" value="冰肌" checked> 冰肌</label><br>
-      <label><input type="checkbox" class="type-filter" value="熱蠟" checked> 熱蠟</label><br>
-      <hr>
-      <strong>招募條件：</strong><br>
-      <label><input type="checkbox" class="offer-filter" value="互惠" checked> 互惠</label><br>
-      <label><input type="checkbox" class="offer-filter" value="付費" checked> 付費</label><br>
-    </div>
-
     <div id="map"></div>
 
     <script src="script.js"></script>
-    <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap">
+    <script async
+     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap">
     </script>
   </body>
 </html>
+    
