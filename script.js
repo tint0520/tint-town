@@ -1,22 +1,49 @@
 let map;
 let markers = [];
 let currentLayer = "town";
-let swipeData = []; // 用來存 swipe 模式資料
+let swipeData = [];
 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/12nFTJltWKVTVVBOe5RC9wQ4GWqgqcCO1bFkR-qMFmjs/gviz/tq?tqx=out:json";
 
-async function initMap() {
+function startApp() {
+  document.getElementById("popup").style.display = "none";
+  document.getElementById("home-view").style.display = "flex";
+  switchView("home");
+  getUserLocation();
+}
+
+function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: 25.034, lng: 121.564 },
     zoom: 12,
   });
 
-  document.querySelectorAll('#filter-box input[type="checkbox"]').forEach(input =>
-    input.addEventListener('change', () => switchLayer(currentLayer))
-  );
-
   switchLayer("town");
-  await loadSwipeData();
+  loadSwipeData();
+}
+
+function getUserLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const pos = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+
+      map.setCenter(pos);
+      map.setZoom(14);
+
+      new google.maps.Marker({
+        position: pos,
+        map,
+        title: "你在這裡",
+        icon: {
+          url: 'https://github.com/tint0520/tint-town/blob/main/person_pin_circle_30dp_B2A8D3_FILL1_wght400_GRAD0_opsz24.png?raw=true',
+          scaledSize: new google.maps.Size(44, 44)
+        }
+      });
+    });
+  }
 }
 
 function getSelectedValues(className) {
@@ -53,7 +80,7 @@ function loadLayer(layer) {
         const desc = row.c[6]?.v || "";
         const latlng = row.c[8]?.v || "";
         const address = row.c[9]?.v || "";
-        const photo = row.c[10]?.v || "";
+        const photo = row.c[10]?.v || "https://i.imgur.com/Vs6fE3r.png";
 
         if (!latlng.includes(",")) return;
         const [lat, lng] = latlng.split(",").map(Number);
@@ -64,7 +91,11 @@ function loadLayer(layer) {
         const marker = new google.maps.Marker({
           position: { lat, lng },
           map,
-          title: name
+          title: name,
+          icon: {
+            url: 'https://github.com/tint0520/tint-town/blob/main/local_mall_30dp_EECECD_FILL1_wght400_GRAD0_opsz24.png?raw=true',
+            scaledSize: new google.maps.Size(40, 40)
+          }
         });
 
         marker.addListener("click", () => {
