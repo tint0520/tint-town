@@ -174,39 +174,37 @@ function showMapMarker(index) {
   let swiper; // ← 新增的變數 (Swiper的實體)
 
   function initSwiper() {
-    document.querySelector('.swiper-wrapper').innerHTML = stores.map(store => `
-      <div class="swiper-slide">
-        <div style="position: relative;">
-          <img src="${store.photo}" alt="${store.name}">
-         
-        </div>
-        <div class="store-info">
-          <h5>${store.name}</h5>
-          <p>簡介：${store.desc}</p>
-          <p>服務：${store.type}</p>
-          <p>標籤：${store.tags}</p>
-          <p>地址：${store.address}</p>
-          <p>營業時間：${store.hours}</p>
-          <p>
-            <a href="${store.link}">🔗我要預約</a> | 
-            <a href="${store.ig}">📸Instagram</a> | 
-            <a href="${store.line}">💬LINE</a>
-          </p>
-        </div>
-        <div class="store-distance">
-          距離：${store.distance} km | 
-          <span class="map-btn" data-index="${index}">🗺️地圖位置</span> | 
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${store.latlng}" target="_blank">🚗導航</a>
-        </div>
+  document.querySelector('.swiper-wrapper').innerHTML = stores.map((store, index) => `
+    <div class="swiper-slide">
+      <div style="position: relative;">
+        <img src="${store.photo}" alt="${store.name}">
       </div>
-      </div>`).join('');
+      <div class="store-info">
+        <h5>${store.name}</h5>
+        <p>簡介：${store.desc}</p>
+        <p>服務：${store.type}</p>
+        <p>標籤：${store.tags}</p>
+        <p>地址：${store.address}</p>
+        <p>營業時間：${store.hours}</p>
+        <p>
+          <a href="${store.link}">🔗我要預約</a> | 
+          <a href="${store.ig}">📸Instagram</a> | 
+          <a href="${store.line}">💬LINE</a>
+        </p>
+      </div>
+      <div class="store-distance">
+        距離：${store.distance} km | 
+        <span class="map-btn" data-index="${index}">🗺️地圖位置</span> | 
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${store.latlng}" target="_blank">🚗導航</a>
+      </div>
+    </div>`).join('');
 
-    swiper = new Swiper('.swiper-container', { 
-      slidesPerView: 'auto', 
-      spaceBetween: 15, 
-      centeredSlides: true 
-    });
-  // 新增地圖位置按鈕點擊事件
+  swiper = new Swiper('.swiper-container', { 
+    slidesPerView: 'auto', 
+    spaceBetween: 15, 
+    centeredSlides: true 
+  });
+
   document.querySelectorAll('.map-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const index = btn.getAttribute('data-index');
