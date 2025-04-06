@@ -76,7 +76,22 @@
   font-size: 14px;
   line-height: 1.6;
 }
+/* 調整內文不要貼齊左側 */
+.store-info h5,
+.store-info p {
+  padding-left: 10px; /* 標題和內文稍微往右移動 */
+}
 
+/* 我要預約、IG、LINE 連結置中 */
+.store-info p:last-child {
+  text-align: center;
+}
+
+/* 距離、地圖位置、導航置中 */
+.store-distance {
+  text-align: center; /* 文字水平置中 */
+  padding-left: 0; /* 移除原本的padding-left */
+}
 /* 底部的距離區塊 */
 .store-distance {
   margin-top: 12px; /* 距離上方資訊再拉開一點 */
