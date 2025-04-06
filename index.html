@@ -33,6 +33,9 @@
 
     /* 頁面標頭樣式 */
     #app-header { padding: 20px; text-align: center; background-color: #f8f9fa; }
+
+    /* 收藏按鈕樣式 */
+    .favorite-btn { cursor: pointer; color: #e74c3c; }
   </style>
 
   <!-- 載入 CSV 資料處理套件 (PapaParse) -->
@@ -42,7 +45,7 @@
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 
   <!-- Google Maps JavaScript API（記得換上你的API金鑰） -->
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM鑰&callback=initMap"></script>
 
   <script defer>
     // 設定你的 Google Sheets CSV 連結
@@ -74,13 +77,14 @@
             // 建立店家地圖標記
             const marker = new google.maps.Marker({ position: { lat, lng }, title: store.name });
 
-            // 點擊地圖標記時顯示的店家資訊視窗
+            // 點擊地圖標記時顯示的店家資訊視窗（含收藏按鈕）
             const infoContent = `
               <h6>${store.name}</h6>
               <p>${store.desc || ''}</p>
               <p>📍 ${store.address || ''}</p>
               <p>⏰ ${store.hours || ''}</p>
               ${store.photo ? `<img src="${store.photo}" class="img-fluid rounded">` : ''}
+              <br><button class="favorite-btn btn btn-light" onclick="toggleFavorite('${store.name}')">❤️ 收藏/取消收藏</button>
             `;
 
             const infoWindow = new google.maps.InfoWindow({ content: infoContent });
@@ -93,6 +97,19 @@
           new markerClusterer.MarkerClusterer({ markers, map });
         }
       });
+    }
+
+    // 收藏或取消收藏店家
+    function toggleFavorite(storeName) {
+      let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      if (favorites.includes(storeName)) {
+        favorites = favorites.filter(name => name !== storeName);
+        alert(`${storeName} 已從收藏中移除`);
+      } else {
+        favorites.push(storeName);
+        alert(`${storeName} 已加入收藏！`);
+      }
+      localStorage.setItem('favorites', JSON.stringify(favorites));
     }
 
     // 開始使用App，隱藏初始彈窗並顯示首頁
