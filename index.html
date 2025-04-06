@@ -4,21 +4,59 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tint Maps 美業地圖 App</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script defer>
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
-    let map;
 
+  <!-- 載入字型（Google Fonts） -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+
+  <!-- 載入 Bootstrap CSS (響應式框架) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    /* 設定頁面基本樣式，讓地圖填滿整個頁面 */
+    html, body, #map-view { height: 100%; }
+    body { font-family: 'Noto Sans TC', sans-serif; }
+
+    /* 固定在頁面底部的導航列 */
+    #bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    }
+    .nav-btn { flex: 1; padding: 10px; text-align: center; color: #555; }
+
+    /* 控制視圖顯示與隱藏 */
+    .view { display: none; padding-bottom: 60px; }
+    .active-view { display: flex; flex-direction: column; }
+
+    /* 頁面標頭樣式 */
+    #app-header { padding: 20px; text-align: center; background-color: #f8f9fa; }
+  </style>
+
+  <!-- 載入 CSV 資料處理套件 (PapaParse) -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <!-- Google Maps JavaScript API（記得換上你的API金鑰） -->
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
+
+  <script defer>
+    // 設定你的 Google Sheets CSV 連結
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
+
+    let map; // 存放地圖的變數
+
+    // 初始化地圖
     function initMap() {
       map = new google.maps.Map(document.getElementById("map-view"), {
         center: { lat: 25.034, lng: 121.564 },
         zoom: 12,
       });
-      loadStoreData();
+      loadStoreData(); // 載入店家資料到地圖上
     }
 
+    // 從Google Sheets載入店家資料並顯示在地圖上
     function loadStoreData() {
       Papa.parse(SHEET_URL, {
         download: true,
@@ -26,74 +64,65 @@
         complete: function(results) {
           results.data.forEach(store => {
             if (!store.latlng || !store.latlng.includes(",")) return;
-
             const [lat, lng] = store.latlng.split(",").map(Number);
 
-            const marker = new google.maps.Marker({
-              position: { lat, lng },
-              map,
-              title: store.name
-            });
+            // 建立店家地圖標記
+            const marker = new google.maps.Marker({ position: { lat, lng }, map, title: store.name });
 
+            // 點擊地圖標記時顯示的店家資訊視窗
             const infoContent = `
-              <h3>${store.name}</h3>
+              <h6>${store.name}</h6>
               <p>${store.desc || ''}</p>
               <p>📍 ${store.address || ''}</p>
               <p>⏰ ${store.hours || ''}</p>
-              ${store.photo ? `<img src="${store.photo}" style="width:100%;max-width:200px;border-radius:8px;margin-top:10px;">` : ''}
+              ${store.photo ? `<img src="${store.photo}" class="img-fluid rounded">` : ''}
             `;
 
-            const infoWindow = new google.maps.InfoWindow({
-              content: infoContent
-            });
+            const infoWindow = new google.maps.InfoWindow({ content: infoContent });
 
-            marker.addListener('click', () => {
-              infoWindow.open(map, marker);
-            });
+            marker.addListener('click', () => infoWindow.open(map, marker));
           });
         }
       });
     }
 
-    function startApp() {
-      document.getElementById("popup").style.display = "none";
-      switchView("home");
+    // 開始使用App，隱藏初始彈窗並顯示首頁
+    function startApp() { 
+      document.getElementById("popup").style.display = "none"; 
+      switchView("home"); 
     }
 
-    function startExploring() {
-      switchView('map');
-    }
+    // 開始探索，切換到地圖頁面
+    function startExploring() { switchView('map'); }
 
+    // 視圖切換函數（首頁與地圖間切換）
     function switchView(view) {
-      document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-      document.getElementById(`${view}-view`).style.display = 'flex';
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+      document.getElementById(`${view}-view`).classList.add('active-view');
     }
   </script>
 </head>
 <body>
-  <div id="popup">
-    <p>📍 為了推薦你附近的店家<br>請允許我們取得你的定位</p>
-    <button onclick="startApp()">好啊，開逛！</button>
-  </div>
-
+  <!-- 頁面頂部標頭區域 -->
   <div id="app-header">
-    <h1>Tint Maps</h1>
+    <h5>Tint Maps</h5>
     <p>找附近的美業店家</p>
   </div>
 
-  <div id="home-view" class="view">
-    <h1>歡迎來到 Tint Town</h1>
+  <!-- 首頁內容區域 -->
+  <div id="home-view" class="view active-view container">
+    <h4 class="mt-4">歡迎來到 Tint Town</h4>
     <p>立即探索附近最美的美甲工作室，輕鬆從地圖找到你想去的店家</p>
-    <button onclick="startExploring()">開始探索</button>
+    <button class="btn btn-primary mt-3" onclick="startExploring()">開始探索</button>
   </div>
 
+  <!-- 地圖顯示區域 -->
   <div id="map-view" class="view"></div>
 
-  <div id="bottom-nav">
-    <button onclick="switchView('home')">🏠<br>首頁</button>
-    <button onclick="switchView('map')">🗺<br>地圖</button>
+  <!-- 頁面底部導航列 -->
+  <div id="bottom-nav" class="d-flex">
+    <div class="nav-btn" onclick="switchView('home')">🏠<br>首頁</div>
+    <div class="nav-btn" onclick="switchView('map')">🗺<br>地圖</div>
   </div>
-
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
 </body>
 </html>
