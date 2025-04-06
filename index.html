@@ -3,137 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tint Town 美業地圖 + App 幻術模式</title>
+  <title>Tint Town 美業地圖 App</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      height: 100%;
-      font-family: 'Noto Sans TC', sans-serif;
-      background: #fff7f9;
-      position: relative;
-    }
-    .view {
-      position: absolute; top: 100px; left: 0; right: 0; bottom: 60px;
-      display: none;
-    }
-    #map-view { z-index: 1; }
-    #swipe-view {
-      background: #fff0f4;
-      z-index: 2;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      padding: 20px;
-    }
-    .card {
-      width: 90%;
-      max-width: 360px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.1);
-      padding: 16px;
-      text-align: center;
-      margin-bottom: 16px;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-    }
-    .card.slide-left { transform: translateX(-100%); opacity: 0; }
-    .card.slide-right { transform: translateX(100%); opacity: 0; }
-    .card img {
-      width: 100%;
-      border-radius: 12px;
-      height: 200px;
-      object-fit: cover;
-    }
-    .card h3 {
-      margin: 10px 0 4px;
-      color: #d06e6e;
-    }
-    .card p {
-      font-size: 14px;
-      color: #555;
-      margin: 4px 0;
-    }
-    .card a {
-      display: inline-block;
-      margin: 6px;
-      font-size: 14px;
-      color: #d06e6e;
-      text-decoration: underline;
-    }
-    #app-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 100px;
-      background: #fff0f4;
-      color: #d06e6e;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      z-index: 1000;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    #app-header h1 {
-      font-size: 20px;
-    }
-    #app-header p {
-      font-size: 12px;
-      color: #a88a9a;
-    }
-    #bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 60px;
-      background: white;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      border-top: 1px solid #eee;
-      z-index: 9999;
-    }
-    #bottom-nav button {
-      background: none;
-      border: none;
-      font-size: 14px;
-      color: #d06e6e;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    #popup {
-      position: fixed;
-      z-index: 9999;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255, 255, 255, 0.95);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 20px;
-    }
-    #popup p {
-      font-size: 18px;
-      color: #444;
-      margin-bottom: 20px;
-    }
-    #popup button {
-      background: #d06e6e;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 24px;
-      font-size: 16px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="popup">
@@ -148,10 +20,10 @@
 
   <div id="map-view" class="view"></div>
   <div id="swipe-view" class="view"></div>
-  <div id="home-view" class="view" style="z-index: 10; background: white; display: flex; justify-content: center; align-items: center; flex-direction: column;">
-    <h1 style="font-size: 28px; color: #d06e6e; margin-bottom: 12px;">歡迎來到 Tint Town</h1>
-    <p style="color: #555; font-size: 16px; max-width: 300px; text-align: center;">立即探索附近最美的美甲工作室，從地圖、滑卡、到一鍵分享</p>
-    <button onclick="switchView('map')" style="margin-top: 20px; background: #d06e6e; color: white; border: none; padding: 10px 16px; border-radius: 20px; font-size: 16px;">開始探索</button>
+  <div id="home-view" class="view">
+    <h1>歡迎來到 Tint Town</h1>
+    <p>立即探索附近最美的美甲工作室，從地圖、滑卡、到一鍵分享</p>
+    <button onclick="switchView('map')">開始探索</button>
   </div>
 
   <div id="bottom-nav">
