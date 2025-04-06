@@ -4,7 +4,7 @@ let currentLayer = "town";
 let swipeData = [];
 let userPosition = null;
 
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/12nFTJltWKVTVVBOe5RC9wQ4GWqgqcCO1bFkR-qMFmjs/gviz/tq?tqx=out:json";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1YsGmD_2EtrwjypWZqMU1n9H_pn-6NhZQcawC_-CpAN8/gviz/tq?tqx=out:json";
 
 function startApp() {
   document.getElementById("popup").style.display = "none";
