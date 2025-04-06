@@ -3,9 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tint Maps 美業地圖 App</title>
+  <title>Tint Town 美業地圖 App</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%; font-family: 'Noto Sans TC', sans-serif;
+      background: #fff7f9; overflow: hidden;
+    }
+    .view {
+      position: absolute; top: 100px; left: 0; right: 0; bottom: 60px;
+      display: none;
+    }
+    #map-view { z-index: 1; }
+    #swipe-view {
+      background: #fff0f4; z-index: 2;
+      display: none; justify-content: center; align-items: center; flex-direction: column; padding: 20px;
+    }
+    .card {
+      width: 90%; max-width: 360px;
+      background: linear-gradient(to bottom right, #fff8f9, #fff);
+      border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+      padding: 16px; text-align: center; margin-bottom: 16px;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .card img {
+      width: 100%; border-radius: 12px; height: 200px; object-fit: cover;
+    }
+    .card h3 { margin: 10px 0 4px; color: #d06e6e; }
+    .card p { font-size: 14px; color: #555; margin: 4px 0; }
+    .card a {
+      display: inline-block; margin: 6px; font-size: 14px;
+      color: #d06e6e; text-decoration: underline;
+    }
+    #popup {
+      position: fixed; z-index: 9999; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex; flex-direction: column; justify-content: center;
+      align-items: center; text-align: center; padding: 20px;
+    }
+    #popup p { font-size: 18px; color: #444; margin-bottom: 20px; }
+    #popup button {
+      background: #d06e6e; color: white; border: none; padding: 10px 20px;
+      border-radius: 24px; font-size: 16px;
+    }
+    #app-header {
+      position: fixed; top: 0; left: 0; right: 0; height: 100px;
+      background: #fff0f4; color: #d06e6e; display: flex;
+      flex-direction: column; align-items: center; justify-content: center;
+      font-weight: bold; z-index: 1000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    #app-header h1 { font-size: 20px; }
+    #app-header p { font-size: 12px; color: #a88a9a; }
+    #home-view {
+      z-index: 10; background: white;
+      display: flex; justify-content: center; align-items: center;
+      flex-direction: column; text-align: center; padding: 2rem;
+    }
+    #home-view h1 {
+      font-size: 28px; color: #d06e6e; margin-bottom: 12px;
+    }
+    #home-view p {
+      color: #555; font-size: 16px; max-width: 300px; margin-bottom: 20px;
+    }
+    #home-view button {
+      background: #d06e6e; color: white; border: none;
+      padding: 10px 16px; border-radius: 20px; font-size: 16px;
+    }
+    #bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 60px; background: white;
+      display: flex; justify-content: space-around; align-items: center;
+      border-top: 1px solid #eee; z-index: 9999;
+    }
+    #bottom-nav button {
+      background: none; border: none; font-size: 14px;
+      color: #d06e6e; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+  </style>
 </head>
 <body>
   <div id="popup">
@@ -22,19 +104,21 @@
   <div id="swipe-view" class="view"></div>
   <div id="home-view" class="view">
     <h1>歡迎來到 Tint Maps</h1>
-    <p>立即探索附近最美的美甲工作室，從地圖找店、滑滑選店、到一鍵分享</p>
+    <p>立即探索附近最美的美甲工作室，從地圖、滑卡、到一鍵分享</p>
     <button onclick="startExploring()">開始探索</button>
   </div>
 
   <div id="bottom-nav">
     <button onclick="switchView('home')">🏠<br>首頁</button>
-    <button onclick="switchView('map')">🗺<br>美業地圖</button>
-    <button onclick="switchView('swipe')">💘<br>滑滑選店</button>
-    <button onclick="applyTypeFilter()">🧃<br>篩選服務</button>
-    <button onclick="goToMyLocation()">📍<br>我在這</button>
+    <button onclick="switchView('map')">🗺<br>地圖</button>
+    <button onclick="switchView('swipe')">💘<br>滑卡</button>
+    <button onclick="applyTypeFilter()">🧃<br>篩選</button>
+    <button onclick="goToMyLocation()">📍<br>我這</button>
   </div>
 
   <script src="script.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap">
+  </script>
 </body>
 </html>
