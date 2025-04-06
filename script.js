@@ -13,6 +13,14 @@ function startApp() {
   getUserLocation();
 }
 
+function startExploring() {
+  switchView('map');
+  setTimeout(() => {
+    getUserLocation();
+    if (!map) initMap();
+  }, 200);
+}
+
 function initMap() {
   map = new google.maps.Map(document.getElementById("map-view"), {
     center: { lat: 25.034, lng: 121.564 },
