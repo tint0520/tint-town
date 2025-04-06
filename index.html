@@ -25,6 +25,16 @@
   justify-content: center; /* 垂直置中 */
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
+
+    .map-btn {
+  color: #0d6efd; /* 藍色 */
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.map-btn:hover {
+  color: #0a58ca;
+}
    .store-distance {
   position: relative;  /* 改成相對位置，讓距離貼著上方資訊 */
   margin-top: 8px;     /* 距離上面店家資訊的間距 */
@@ -131,7 +141,17 @@ function initMap() {
       marker.addListener('click', () => {
         showCardForStore(index); // 點擊後顯示對應的店家卡片
       });
+function showMapMarker(index) {
+  const store = stores[index];
+  const [lat, lng] = store.latlng.split(",").map(Number);
 
+  // 切換回地圖
+  showView('map-view');
+
+  // 移動地圖中心至店家位置
+  map.setCenter({lat, lng});
+  map.setZoom(17); // 調整地圖縮放程度（可自訂）
+}
       markers.push(marker);
     });
 
