@@ -1,41 +1,273 @@
-<!-- 最新 index.html，包含滑卡左右滑、分享功能 -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tint Maps 美業地圖 App</title>
+  <title>Tint Maps</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+    #banner {
+      width: 100%;
+      background-color: #ffeef0;
+      text-align: center;
+      padding: 12px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #d06e6e;
+      position: relative;
+      z-index: 3;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+    #card-carousel-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 247, 249, 0.95);
+      padding: 20px 12px 32px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      z-index: 1;
+      transition: transform 0.3s ease;
+    }
+    #card-carousel {
+      display: flex;
+      gap: 12px;
+    }
+    .card {
+      flex: 0 0 80%;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 16px;
+      scroll-snap-align: start;
+    }
+    .card h3 {
+      margin: 0 0 8px;
+      color: #d06e6e;
+    }
+    .card p {
+      font-size: 14px;
+      color: #444;
+      margin: 6px 0;
+    }
+    .card .address {
+      font-size: 13px;
+      color: #888;
+    }
+    .card .distance {
+      font-size: 13px;
+      color: #666;
+      margin-top: 4px;
+    }
+    .btn-group button {
+      display: inline-block;
+      margin: 6px 4px 0 0;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 16px;
+      background: #d06e6e;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .mini-card {
+      padding: 8px 12px;
+      background: white;
+      border-top: 1px solid #eee;
+      font-size: 14px;
+      color: #d06e6e;
+      cursor: pointer;
+    }
+    #mini-card-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      display: none;
+      flex-direction: column;
+      z-index: 2;
+      max-height: 40vh;
+      overflow-y: auto;
+    }
+  </style>
 </head>
 <body>
-  <div id="popup">
-    <p>📍 為了推薦你附近的店家<br>請允許我們取得你的定位</p>
-    <button onclick="startApp()">好啊，開逛！</button>
+  <div id="banner">Tint Maps</div>
+  <div id="map"></div>
+  <div id="card-carousel-container">
+    <div id="card-carousel"></div>
   </div>
+  <div id="mini-card-bar"></div>
 
-  <div id="app-header">
-    <h1>Tint Maps</h1>
-    <p>找附近的美業店家</p>
-  </div>
+  <script>
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1YsGmD_2EtrwjypWZqMU1n9H_pn-6NhZQcawC_-CpAN8/gviz/tq?tqx=out:json";
 
-  <div id="map-view" class="view"></div>
-  <div id="swipe-view" class="view">
-    <div id="card-container"></div>
-  </div>
-  <div id="home-view" class="view">
-    <h1>歡迎來到 Tint Town</h1>
-    <p>立即探索附近最美的美甲工作室，從地圖、滑卡、到一鍵分享</p>
-    <button onclick="startExploring()">開始探索</button>
-  </div>
+    let userLocation = null;
+    let map;
+    let markers = [];
+    let storeData = [];
+    let expanded = true;
 
-  <div id="bottom-nav">
-    <button onclick="switchView('home')">🏠<br>首頁</button>
-    <button onclick="switchView('map')">🗺<br>地圖</button>
-    <button onclick="switchView('swipe')">💘<br>滑卡</button>
-  </div>
+    navigator.geolocation.getCurrentPosition(pos => {
+      userLocation = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      };
+      initMap();
+      loadCards();
+    }, () => {
+      alert("無法取得定位，將不顯示距離與地圖標記");
+      initMap();
+      loadCards();
+    });
 
-  <script src="script.js"></script>
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: userLocation || { lat: 25.034, lng: 121.564 },
+        zoom: 13,
+      });
+    }
+
+    function getDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371e3;
+      const toRad = deg => deg * Math.PI / 180;
+      const φ1 = toRad(lat1), φ2 = toRad(lat2);
+      const Δφ = toRad(lat2 - lat1), Δλ = toRad(lng2 - lng1);
+      const a = Math.sin(Δφ/2)**2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2)**2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    async function loadCards() {
+      const res = await fetch(SHEET_URL);
+      const text = await res.text();
+      const json = JSON.parse(text.substr(47).slice(0, -2));
+      const rows = json.table.rows;
+
+      const container = document.getElementById('card-carousel');
+      const miniBar = document.getElementById('mini-card-bar');
+      container.innerHTML = "";
+      miniBar.innerHTML = "";
+      storeData = rows;
+      markers = [];
+
+      rows.forEach((row, index) => {
+        const name = row.c[0]?.v || "";
+        const link = row.c[1]?.v || "";
+        const type = row.c[2]?.v || "";
+        const tags = row.c[3]?.v || "";
+        const desc = row.c[4]?.v || "";
+        const latlng = row.c[5]?.v || "";
+        const address = row.c[6]?.v || "";
+        const hours = row.c[7]?.v || "";
+        const ig = row.c[8]?.v || "";
+        const line = row.c[9]?.v || "";
+
+        let distanceText = "";
+        let marker;
+        if (userLocation && latlng.includes(",")) {
+          const [lat, lng] = latlng.split(',').map(Number);
+          const d = getDistance(userLocation.lat, userLocation.lng, lat, lng);
+          distanceText = d > 1000 ? `${(d/1000).toFixed(1)} 公里` : `${Math.round(d)} 公尺`;
+
+          marker = new google.maps.Marker({
+            position: { lat, lng },
+            map,
+            title: name
+          });
+
+          marker.addListener("click", () => expandFromMini(index));
+          markers.push(marker);
+        }
+
+        const card = document.createElement('div');
+        card.className = "card";
+        card.id = `card-${index}`;
+        card.innerHTML = `
+          <h3>${name}</h3>
+          <p>${desc}</p>
+          <p class="address">📍 ${address}</p>
+          ${distanceText ? `<p class="distance">距離你：🧭 ${distanceText}</p>` : ''}
+          ${hours ? `<p>營業時間：${hours}</p>` : ''}
+          <p>類型：${type}</p>
+          <p>標籤：${tags}</p>
+          <div class="btn-group">
+            <button onclick="handleClick('${link}', '線上預約')">🔗 線上預約</button>
+            <button onclick="handleClick('${ig}', 'IG')">📷 IG</button>
+            <button onclick="handleClick('${line}', 'LINE')">💬 LINE</button>
+            <button onclick="shareStore('${name}', '${desc}', '${address}', '${link}')">🔄 分享</button>
+            <button onclick="focusOnMarker(${index})">📍 查看位置</button>
+          </div>
+        `;
+        container.appendChild(card);
+
+        const mini = document.createElement('div');
+        mini.className = 'mini-card';
+        mini.innerText = name;
+        mini.onclick = () => expandFromMini(index);
+        miniBar.appendChild(mini);
+      });
+    }
+
+    function focusOnMarker(index) {
+      const marker = markers[index];
+      if (marker) {
+        map.panTo(marker.getPosition());
+        map.setZoom(16);
+        toggleMiniMode(true);
+      }
+    }
+
+    function toggleMiniMode(mini) {
+      const container = document.getElementById('card-carousel-container');
+      const miniBar = document.getElementById('mini-card-bar');
+      if (mini) {
+        container.style.transform = 'translateY(100%)';
+        miniBar.style.display = 'flex';
+        expanded = false;
+      } else {
+        container.style.transform = 'translateY(0)';
+        miniBar.style.display = 'none';
+        expanded = true;
+      }
+    }
+
+    function expandFromMini(index) {
+      toggleMiniMode(false);
+      document.querySelector(`#card-${index}`)?.scrollIntoView({ behavior: "smooth", inline: "center" });
+    }
+
+    function handleClick(url, label) {
+      if (url && url.trim()) {
+        window.open(url, '_blank');
+      } else {
+        alert(`此店家未提供 ${label}`);
+      }
+    }
+
+    function shareStore(name, desc, address, link) {
+      const message = `【Tint 推薦店家】\n店名：${name}\n${desc}\n📍 ${address}\n${link ? '預約連結：' + link : ''}`;
+      navigator.clipboard.writeText(message).then(() => {
+        alert("已複製店家資訊，可貼給朋友囉！");
+        window.open(`https://line.me/R/msg/text/?${encodeURIComponent(message)}`, '_blank');
+      });
+    }
+  </script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
 </body>
 </html>
