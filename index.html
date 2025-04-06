@@ -18,34 +18,16 @@
       font-weight: bold;
       color: #d06e6e;
       border-bottom: 2px solid #d06e6e44;
-    }
-    #popup {
-      height: calc(100vh - 60px);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background-color: #fff;
-    }
-    #popup h1 {
-      color: #d06e6e;
-    }
-    #popup button {
-      padding: 12px 24px;
-      background-color: #d06e6e;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
+      position: relative;
+      z-index: 10;
     }
     .view {
       display: none;
       flex-direction: column;
       height: calc(100vh - 60px);
     }
-    #map-view {
-      flex: 1;
+    #map {
+      height: 50vh;
     }
     #swipe-view {
       padding: 12px;
@@ -92,20 +74,8 @@
 </head>
 <body>
   <div id="banner">Tint 地圖・滑滑選店</div>
-
-  <div id="popup">
-    <h1>歡迎來到 Tint 美業地圖</h1>
-    <button onclick="startApp()">開始探索附近店家</button>
-  </div>
-
-  <div id="home-view" class="view">
-    <button onclick="startExploring()">進入地圖模式</button>
-  </div>
-
-  <div id="map-view" class="view">
-    <div id="map" style="height: 50vh;"></div>
-    <div id="swipe-view"></div>
-  </div>
+  <div id="map"></div>
+  <div id="swipe-view"></div>
 
   <script>
     let map;
@@ -113,66 +83,45 @@
     let userPosition = null;
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/12nFTJltWKVTVVBOe5RC9wQ4GWqgqcCO1bFkR-qMFmjs/gviz/tq?tqx=out:json";
 
-    function startApp() {
-      document.getElementById("popup").style.display = "none";
-      document.getElementById("home-view").style.display = "flex";
-      switchView("home");
-      getUserLocation();
-    }
-
-    function startExploring() {
-      switchView('map');
-      setTimeout(() => {
-        getUserLocation();
-        if (!map) initMap();
-      }, 200);
-    }
-
-    function switchView(view) {
-      document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-      document.getElementById(`${view}-view`).style.display = 'flex';
-    }
-
-    function getUserLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-          userPosition = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude
-          };
-
-          if (map) {
-            map.setCenter(userPosition);
-            map.setZoom(14);
-
-            new google.maps.Marker({
-              position: userPosition,
-              map,
-              title: "你在這裡",
-              icon: {
-                url: 'https://github.com/tint0520/tint-town/blob/main/person_pin_circle_30dp_B2A8D3_FILL1_wght400_GRAD0_opsz24.png?raw=true',
-                scaledSize: new google.maps.Size(44, 44)
-              }
-            });
-          }
-
-          loadSwipeData();
-        });
-      }
-    }
+    window.onload = () => {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        userPosition = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        };
+        initMap();
+        loadSwipeData();
+      }, () => {
+        alert("無法取得定位，只顯示地圖");
+        initMap();
+        loadSwipeData();
+      });
+    };
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 25.034, lng: 121.564 },
-        zoom: 12,
+        center: userPosition || { lat: 25.034, lng: 121.564 },
+        zoom: 13,
       });
+
+      if (userPosition) {
+        new google.maps.Marker({
+          position: userPosition,
+          map,
+          title: "你在這裡",
+          icon: {
+            url: 'https://github.com/tint0520/tint-town/blob/main/person_pin_circle_30dp_B2A8D3_FILL1_wght400_GRAD0_opsz24.png?raw=true',
+            scaledSize: new google.maps.Size(44, 44)
+          }
+        });
+      }
     }
 
     function getDistanceKm(lat1, lng1, lat2, lng2) {
       const toRad = deg => deg * Math.PI / 180;
       const R = 6371;
       const dLat = toRad(lat2 - lat1);
-      const dLng = toRad(lat2 - lng1);
+      const dLng = toRad(lng2 - lng1);
       const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
@@ -253,6 +202,6 @@
       }
     }
   </script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap"></script>
 </body>
 </html>
