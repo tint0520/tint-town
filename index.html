@@ -5,14 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tint Maps 美業地圖 App</title>
 
-  <!-- 載入字型（Google Fonts） -->
+  <!-- 載入字型（Google Fonts）與 Bootstrap CSS -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
-
-  <!-- 載入 Bootstrap CSS (響應式框架) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
-    html, body, #map-view { height: 100%; }
+    html, body, #map-view { height: 100%; margin: 0; padding: 0; }
     body { font-family: 'Noto Sans TC', sans-serif; }
 
     #bottom-nav {
@@ -21,39 +19,51 @@
       left: 0;
       right: 0;
       background: white;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      border-radius: 15px 15px 0 0;
+      box-shadow: 0 -3px 10px rgba(0,0,0,0.15);
     }
-    .nav-btn { flex: 1; padding: 10px; text-align: center; color: #555; }
+    .nav-btn { flex: 1; padding: 12px; text-align: center; color: #555; font-size:14px; }
 
-    .view { display: none; padding-bottom: 60px; }
+    .view { display: none; }
     .active-view { display: flex; flex-direction: column; }
 
-    #app-header { padding: 20px; text-align: center; background-color: #f8f9fa; }
+    #search-input {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      z-index: 5;
+      border-radius: 20px;
+      padding: 10px 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
 
     .favorite-btn { cursor: pointer; color: #e74c3c; }
 
-    #search-bar {
-      padding: 10px;
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
     #my-location-btn {
-      position: absolute;
+      position: fixed;
       bottom: 80px;
-      right: 10px;
+      right: 15px;
       z-index: 5;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
-    .tag-btn {
-      margin: 2px;
-      padding: 5px 10px;
-      cursor: pointer;
-      background-color: #f1f1f1;
-      border-radius: 5px;
-      display: inline-block;
+    .card-store {
+      position: fixed;
+      bottom: 140px;
+      left: 10px;
+      right: 10px;
+      z-index: 4;
+      border-radius: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      overflow: hidden;
     }
-    .tag-btn.active { background-color: #007bff; color: white; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -65,111 +75,77 @@
 
     let map;
     let markers = [];
-    let allStores = [];
 
     function initMap() {
-      map = new google.maps.Map(document.getElementById("map-view"), {
-        center: { lat: 25.034, lng: 121.564 },
-        zoom: 12,
-      });
+      map = new google.maps.Map(document.getElementById("map-view"), { center: { lat: 25.034, lng: 121.564 }, zoom: 12, });
       loadStoreData();
     }
 
     function loadStoreData() {
-      Papa.parse(SHEET_URL, {
-        download: true,
-        header: true,
-        complete: function(results) {
-          markers = [];
-          allStores = results.data;
-
-          results.data.forEach(store => createMarker(store));
-          new markerClusterer.MarkerClusterer({ markers, map });
-          generateTagFilters();
-        }
-      });
+      Papa.parse(SHEET_URL, { download: true, header: true, complete: function(results) {
+        markers = [];
+        results.data.forEach(store => createMarker(store));
+        new markerClusterer.MarkerClusterer({ markers, map });
+      }});
     }
 
     function createMarker(store) {
       if (!store.latlng || !store.latlng.includes(",")) return;
       const [lat, lng] = store.latlng.split(",").map(Number);
-
       const marker = new google.maps.Marker({ position: { lat, lng }, title: store.name, map });
 
-      const infoContent = `
-        <h6>${store.name}</h6>
-        <p>${store.desc || ''}</p>
-        <p>📍 ${store.address || ''}</p>
-        <p>⏰ ${store.hours || ''}</p>
-        ${store.photo ? `<img src="${store.photo}" class="img-fluid rounded">` : ''}
-        <br><button class="favorite-btn btn btn-light" onclick="toggleFavorite('${store.name}')">❤️ 收藏/取消收藏</button>
-      `;
-
-      const infoWindow = new google.maps.InfoWindow({ content: infoContent });
-      marker.addListener('click', () => infoWindow.open(map, marker));
-
+      marker.addListener('click', () => {
+        showStoreCard(store);
+        map.panTo({ lat, lng });
+      });
       markers.push(marker);
+    }
+
+    function showStoreCard(store) {
+      const card = document.getElementById('store-card');
+      card.innerHTML = `
+        <img src="${store.photo || ''}" class="img-fluid">
+        <div class="p-3">
+          <h5>${store.name}</h5>
+          <p>${store.desc || ''}</p>
+          <p>📍 ${store.address || ''}</p>
+          <p>⏰ ${store.hours || ''}</p>
+          <button class="favorite-btn btn btn-light" onclick="toggleFavorite('${store.name}')">❤️ 收藏</button>
+        </div>`;
+      card.style.display = 'block';
     }
 
     function toggleFavorite(storeName) {
       let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
       if (favorites.includes(storeName)) {
         favorites = favorites.filter(name => name !== storeName);
-        alert(`${storeName} 已從收藏中移除`);
+        alert(`${storeName} 已移除收藏`);
       } else {
         favorites.push(storeName);
-        alert(`${storeName} 已加入收藏！`);
+        alert(`${storeName} 收藏成功！`);
       }
       localStorage.setItem('favorites', JSON.stringify(favorites));
-    }
-
-    function searchStores() {
-      const query = document.getElementById('search-input').value.toLowerCase();
-      markers.forEach(marker => marker.setVisible(marker.getTitle().toLowerCase().includes(query)));
     }
 
     function goToMyLocation() {
       navigator.geolocation.getCurrentPosition(pos => {
         map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         map.setZoom(15);
-      }, () => alert('無法取得你的定位'));
-    }
-
-    function generateTagFilters() {
-      const tags = new Set(allStores.flatMap(store => store.tags?.split(",") || []));
-      const tagContainer = document.getElementById('tag-filter');
-      tags.forEach(tag => {
-        const btn = document.createElement('span');
-        btn.textContent = tag;
-        btn.className = 'tag-btn';
-        btn.onclick = () => filterByTag(tag, btn);
-        tagContainer.appendChild(btn);
       });
-    }
-
-    function filterByTag(tag, btn) {
-      document.querySelectorAll('.tag-btn').forEach(el => el.classList.remove('active'));
-      btn.classList.add('active');
-      markers.forEach((marker, i) => marker.setVisible(allStores[i].tags?.includes(tag)));
-    }
-
-    function switchView(view) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
-      document.getElementById(`${view}-view`).classList.add('active-view');
     }
   </script>
 </head>
 <body>
-  <div id="app-header"><h5>Tint Maps</h5><p>找附近的美業店家</p></div>
+  <input id="search-input" class="form-control" placeholder="搜尋店家名稱">
+  <button id="my-location-btn" class="btn btn-primary" onclick="goToMyLocation()">📍</button>
 
-  <div id="map-view" class="view active-view">
-    <input id="search-input" class="form-control" placeholder="搜尋店家名稱" oninput="searchStores()">
-    <div id="tag-filter" class="p-2"></div>
-    <button id="my-location-btn" class="btn btn-primary" onclick="goToMyLocation()">📍回到我的位置</button>
-  </div>
+  <div id="map-view" class="view active-view"></div>
+
+  <div id="store-card" class="card-store bg-white" style="display:none;"></div>
 
   <div id="bottom-nav" class="d-flex">
-    <div class="nav-btn" onclick="switchView('map')">🗺<br>地圖</div>
+    <div class="nav-btn">🗺<br>探索地圖</div>
+    <div class="nav-btn">❤️<br>我的收藏</div>
   </div>
 </body>
 </html>
