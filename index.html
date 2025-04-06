@@ -15,14 +15,8 @@
     html, body, #map-view { height: 100%; margin: 0; padding: 0; }
     body { font-family: 'Noto Sans TC', sans-serif; }
 
-    #search-input {
-      position: fixed; top: 10px; left: 10px; right: 10px; z-index: 5;
-      border-radius: 20px; padding: 10px 15px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
     #my-location-btn {
-      position: fixed; bottom: 230px; right: 15px; z-index: 5;
+      position: fixed; bottom: 240px; right: 15px; z-index: 5;
       border-radius: 50%; width: 45px; height: 45px;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
@@ -37,30 +31,36 @@
     .nav-btn { flex: 1; padding: 12px; text-align: center; color: #555; font-size:14px; }
 
     .swiper-container {
-      position: fixed; bottom: 60px; left: 0; right: 0; height: 230px;
+      position: fixed; bottom: 60px; left: 0; right: 0; height: 240px;
       padding: 10px 0; z-index: 4;
     }
 
     .swiper-slide {
-      width: 300px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      width: 320px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
       overflow: hidden; background-color: #fff;
     }
 
-    .swiper-slide img { height: 120px; object-fit: cover; width: 100%; }
+    .swiper-slide img { height: 140px; object-fit: cover; width: 100%; }
 
-    .store-info { padding: 10px; }
+    .store-info { padding: 10px; font-size: 14px; }
 
     .distance-info { color: #999; font-size: 12px; }
+
+    .close-btn {
+      position: absolute; right: 10px; top: 10px; z-index: 10;
+      background-color: rgba(0,0,0,0.5); color: white; border-radius: 50%; width: 25px; height: 25px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
   </style>
 
   <!-- Swiper.js &其他JS函式庫 -->
   <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM鑰&callback=initMap"></script>
 
   <script defer>
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0"; // 更換你自己的 Google Sheet連結
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/edit?gid=0#gid=0"; // 更換你的 Google Sheet連結
 
     let map, markers = [], stores = [], userLocation;
 
@@ -83,6 +83,7 @@
           if (!store.latlng) return;
           const [lat, lng] = store.latlng.split(",").map(Number);
           const marker = new google.maps.Marker({ position: { lat, lng }, title: store.name, map });
+          marker.addListener('click', () => { showSingleCard(store); });
           markers.push(marker);
         });
 
@@ -95,47 +96,42 @@
       const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+      const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2) ** 2;
       return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
     }
 
     function initSwiper() {
-      const sortedStores = stores.map(store => {
+      const swiperWrapper = document.querySelector('.swiper-wrapper');
+      swiperWrapper.innerHTML = stores.map(store => {
         const [lat, lng] = store.latlng.split(",").map(Number);
         store.distance = userLocation ? calculateDistance(userLocation.lat, userLocation.lng, lat, lng) : "--";
-        return store;
-      }).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+        return `
+          <div class="swiper-slide">
+            <img src="${store.photo}" alt="${store.name}">
+            <div class="store-info">
+              <h6>${store.name}</h6>
+              <p>${store.desc}</p>
+              <p class="distance-info">距離約 ${store.distance} 公里</p>
+            </div>
+          </div>`;
+      }).join('');
 
-      const swiperWrapper = document.querySelector('.swiper-wrapper');
-      swiperWrapper.innerHTML = sortedStores.map(store => `
-        <div class="swiper-slide">
-          <img src="${store.photo || ''}" alt="${store.name}">
-          <div class="store-info">
-            <h6>${store.name}</h6>
-            <p class="distance-info">距離約 ${store.distance} 公里</p>
-            <p>${store.desc || ''}</p>
-          </div>
-        </div>`).join('');
+      new Swiper('.swiper-container', { slidesPerView: 'auto', spaceBetween: 15, centeredSlides: true });
+    }
 
-      new Swiper('.swiper-container', {
-        slidesPerView: 'auto', spaceBetween: 15, centeredSlides: true
-      });
+    function showSingleCard(store) {
+      alert(`店名：${store.name}\n地址：${store.address}\n營業時間：${store.hours}\n距離約 ${store.distance} 公里`);
     }
   </script>
 </head>
 <body>
-  <input id="search-input" class="form-control" placeholder="搜尋店家名稱">
   <button id="my-location-btn" class="btn btn-primary">📍</button>
-
   <div id="map-view"></div>
-
-  <div class="swiper-container">
-    <div class="swiper-wrapper"></div>
-  </div>
-
+  <div class="swiper-container"><div class="swiper-wrapper"></div></div>
   <div id="bottom-nav">
+    <div class="nav-btn">🗺️<br>地圖找店</div>
+    <div class="nav-btn">📸<br>卡片探店</div>
     <div class="nav-btn">❤️<br>我的收藏</div>
-    <div class="nav-btn">🔍<br>篩選</div>
   </div>
 </body>
 </html>
