@@ -3,7 +3,8 @@ let markers = [];
 let swipeData = [];
 let userPosition = null;
 
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1YsGmD_2EtrwjypWZqMU1n9H_pn-6NhZQcawC_-CpAN8/gviz/tq?tqx=out:json";
+// 新的 Google Sheets 連結
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/gviz/tq?tqx=out:json";
 
 function startApp() {
   document.getElementById("popup").style.display = "none";
@@ -67,17 +68,23 @@ async function loadSwipeData() {
   const rows = json.table.rows;
 
   swipeData = rows.map(row => {
-    const latlng = row.c[8]?.v || "";
+    const latlng = row.c[5]?.v || "";  // latlng 在第六欄 (index:5)
     if (!latlng.includes(",")) return null;
     const [lat, lng] = latlng.split(",").map(Number);
     const dist = userPosition ? getDistanceKm(userPosition.lat, userPosition.lng, lat, lng) : 999;
     return {
-      name: row.c[1]?.v || "",
-      desc: row.c[6]?.v || "",
-      photo: row.c[10]?.v || "https://i.imgur.com/Vs6fE3r.png",
-      address: row.c[9]?.v || "地址未提供",
+      name: row.c[0]?.v || "",      // name (第一欄)
+      link: row.c[1]?.v || "",      // link (第二欄)
+      type: row.c[2]?.v || "",      // type (第三欄)
+      tags: row.c[3]?.v || "",      // tags (第四欄)
+      desc: row.c[4]?.v || "",      // desc (第五欄)
+      address: row.c[6]?.v || "",   // address (第七欄)
+      hours: row.c[7]?.v || "",     // hours (第八欄)
+      ig: row.c[8]?.v || "",        // ig (第九欄)
+      line: row.c[9]?.v || "",      // line (第十欄)
       distance: dist.toFixed(1),
-      lat, lng
+      lat, lng,
+      photo: "https://i.imgur.com/Vs6fE3r.png" // 可自訂圖片來源或 Sheets 新增圖片欄位
     };
   }).filter(Boolean).sort((a,b)=>a.distance-b.distance);
 
@@ -94,8 +101,14 @@ function renderSwipeCard() {
       <img src="${store.photo}" alt="${store.name}" />
       <h3>${store.name}</h3>
       <p>${store.desc}</p>
+      <p>類型：${store.type}</p>
+      <p>標籤：${store.tags}</p>
       <p>📍 ${store.address}</p>
+      <p>🕒 ${store.hours}</p>
       <p>📶 距離你約 ${store.distance} km</p>
+      ${store.link ? `<a href="${store.link}" target="_blank">網站</a>` : ''}
+      ${store.ig ? `<a href="${store.ig}" target="_blank">IG</a>` : ''}
+      ${store.line ? `<a href="${store.line}" target="_blank">LINE</a>` : ''}
     `;
     container.appendChild(card);
 
