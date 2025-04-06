@@ -131,10 +131,11 @@ function initMap() {
   map = new google.maps.Map(document.getElementById("map-view"), {
     center: { lat: 25.034, lng: 121.564 },
 zoom: 14,   // ← 這裡要加上逗號 (,)
-    streetViewControl: false,     // 移除黃色小人（街景功能）
-  mapTypeControl: false,        // 移除衛星地圖等切換按鈕
-  fullscreenControl: false      // 移除全螢幕按鈕（可選移除）
-  });
+    streetViewControl: false,     
+  mapTypeControl: false,        
+  fullscreenControl: false,     
+  zoomControl: false            // 移除縮放按鈕
+});
 
   navigator.geolocation.getCurrentPosition(pos => {
     userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
