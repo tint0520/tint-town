@@ -35,23 +35,34 @@
       overflow-y: auto;
     }
     #map-view { z-index: 1; }
-    #swipe-view { background: #fff0f4; z-index: 2; display: none; padding: 20px; }
+    #swipe-view {
+      background: #fff0f4;
+      z-index: 2;
+      display: none;
+      padding: 20px;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
 
-    .card {
-      width: 90%; max-width: 360px;
-      background: linear-gradient(to bottom right, #fff8f9, #fff);
+    .tinder-card {
+      position: absolute;
+      width: 80vw;
+      max-width: 340px;
+      height: 70vh;
+      background: white;
       border-radius: 16px;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
       padding: 16px;
       text-align: center;
-      margin: 20px auto;
+      transition: transform 0.3s ease, opacity 0.3s ease;
     }
-    .card img {
-      width: 100%; height: 200px; border-radius: 12px; object-fit: cover;
+    .tinder-card img {
+      width: 100%; height: 220px; object-fit: cover;
+      border-radius: 12px;
     }
-    .card h3 { margin: 10px 0 4px; color: #d06e6e; }
-    .card p { font-size: 14px; color: #555; margin: 4px 0; }
-    .card a { color: #d06e6e; text-decoration: underline; }
+    .tinder-card h3 { color: #d06e6e; margin-top: 10px; }
+    .tinder-card p { font-size: 14px; color: #555; }
 
     #bottom-nav {
       position: fixed;
@@ -114,7 +125,7 @@
   <div id="bottom-nav">
     <button onclick="switchView('home')">🏠<br>首頁</button>
     <button onclick="switchView('map')">🗺<br>地圖</button>
-    <button onclick="switchView('swipe')">🫁<br>滑卡</button>
+    <button onclick="switchView('swipe')">💘<br>滑卡</button>
   </div>
 
   <script>
@@ -137,7 +148,7 @@
 
     function switchView(view) {
       document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-      document.getElementById(`${view}-view`).style.display = 'block';
+      document.getElementById(`${view}-view`).style.display = 'flex';
     }
 
     function initMap() {
@@ -183,19 +194,49 @@
         return { name, desc, photo, link, distance };
       });
 
-      renderSwipeCard();
+      renderTinderCards();
     }
 
-    function renderSwipeCard() {
+    function renderTinderCards() {
       const container = document.getElementById("swipe-view");
-      container.innerHTML = swipeData.map(store => `
-        <div class="card">
+      container.innerHTML = "";
+      [...swipeData].reverse().forEach(store => {
+        const card = document.createElement("div");
+        card.className = "tinder-card";
+        card.innerHTML = `
           <img src="${store.photo}" alt="${store.name}" />
           <h3>${store.name}</h3>
           <p>${store.desc}</p>
           <p>📍 距離你約 ${store.distance} km</p>
-          <a href="${store.link}" target="_blank">查看 Instagram</a>
-        </div>`).join('');
+          <a href="${store.link}" target="_blank">查看 IG</a>
+        `;
+        container.appendChild(card);
+
+        let offsetX = 0;
+        let isDragging = false;
+
+        card.addEventListener("mousedown", e => {
+          isDragging = true;
+          offsetX = e.clientX;
+        });
+        document.addEventListener("mousemove", e => {
+          if (!isDragging) return;
+          const dx = e.clientX - offsetX;
+          card.style.transform = `translateX(${dx}px) rotate(${dx / 10}deg)`;
+        });
+        document.addEventListener("mouseup", e => {
+          if (!isDragging) return;
+          isDragging = false;
+          const dx = e.clientX - offsetX;
+          if (Math.abs(dx) > 100) {
+            card.style.transition = "transform 0.5s ease";
+            card.style.transform = `translateX(${dx * 3}px) rotate(${dx / 5}deg)`;
+            setTimeout(() => card.remove(), 500);
+          } else {
+            card.style.transform = "translateX(0) rotate(0)";
+          }
+        });
+      });
     }
 
     function getDistanceKm(lat1, lng1, lat2, lng2) {
