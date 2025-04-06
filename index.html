@@ -50,6 +50,11 @@
   <script defer>
    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
 
+    let map;
+let markers = []; 
+let stores = [];
+let userLocation;
+    
     function initMap() {
       map = new google.maps.Map(document.getElementById("map-view"), { center: { lat: 25.034, lng: 121.564 }, zoom: 14 });
       navigator.geolocation.getCurrentPosition(pos => map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }));
