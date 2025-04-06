@@ -75,7 +75,7 @@ let markers = [];
 let stores = [];
 let userLocation;
     
- function initMap() {
+function initMap() {
   map = new google.maps.Map(document.getElementById("map-view"), {
     center: { lat: 25.034, lng: 121.564 },
     zoom: 14
@@ -85,11 +85,21 @@ let userLocation;
     userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
     map.setCenter(userLocation);
     
-    // 取得使用者位置後，再呼叫載入店家資料
-    loadStoreData();
+    // 建立使用者位置標記（使用你提供的新圖標）
+    new google.maps.Marker({
+      position: userLocation,
+      map,
+      title: "你的位置",
+      icon: {
+        url: "https://github.com/tint0520/tint-town/blob/main/person_pin_circle_30dp_B2A8D3_FILL1_wght400_GRAD0_opsz24.png?raw=true",
+        scaledSize: new google.maps.Size(35, 35)
+      }
+    });
+
+    loadStoreData(); // 載入店家資料
   }, () => {
     alert('無法取得你的定位，距離功能將無法使用。');
-    loadStoreData();  // 若無法定位，仍要載入店家資料
+    loadStoreData();
   });
 
   showView('map-view');
