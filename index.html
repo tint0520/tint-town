@@ -36,6 +36,13 @@
 
     /* 收藏按鈕樣式 */
     .favorite-btn { cursor: pointer; color: #e74c3c; }
+
+    /* 搜尋欄樣式 */
+    #search-bar {
+      padding: 10px;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
   </style>
 
   <!-- 載入 CSV 資料處理套件 (PapaParse) -->
@@ -45,13 +52,14 @@
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 
   <!-- Google Maps JavaScript API（記得換上你的API金鑰） -->
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM鑰&callback=initMap"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
 
   <script defer>
     // 設定你的 Google Sheets CSV 連結
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
 
     let map; // 存放地圖的變數
+    let markers = []; // 存放所有標記的陣列
 
     // 初始化地圖
     function initMap() {
@@ -68,14 +76,14 @@
         download: true,
         header: true,
         complete: function(results) {
-          const markers = [];
+          markers = [];
 
           results.data.forEach(store => {
             if (!store.latlng || !store.latlng.includes(",")) return;
             const [lat, lng] = store.latlng.split(",").map(Number);
 
             // 建立店家地圖標記
-            const marker = new google.maps.Marker({ position: { lat, lng }, title: store.name });
+            const marker = new google.maps.Marker({ position: { lat, lng }, title: store.name, map });
 
             // 點擊地圖標記時顯示的店家資訊視窗（含收藏按鈕）
             const infoContent = `
@@ -112,6 +120,15 @@
       localStorage.setItem('favorites', JSON.stringify(favorites));
     }
 
+    // 即時搜尋店家功能
+    function searchStores() {
+      const query = document.getElementById('search-input').value.toLowerCase();
+      markers.forEach(marker => {
+        const match = marker.getTitle().toLowerCase().includes(query);
+        marker.setVisible(match);
+      });
+    }
+
     // 開始使用App，隱藏初始彈窗並顯示首頁
     function startApp() { 
       document.getElementById("popup").style.display = "none"; 
@@ -138,12 +155,13 @@
   <!-- 首頁內容區域 -->
   <div id="home-view" class="view active-view container">
     <h4 class="mt-4">歡迎來到 Tint Town</h4>
-    <p>立即探索附近最美的美甲工作室，輕鬆從地圖找到你想去的店家</p>
     <button class="btn btn-primary mt-3" onclick="startExploring()">開始探索</button>
   </div>
 
-  <!-- 地圖顯示區域 -->
-  <div id="map-view" class="view"></div>
+  <!-- 地圖顯示區域（含搜尋欄） -->
+  <div id="map-view" class="view">
+    <input id="search-input" class="form-control" placeholder="搜尋店家名稱" oninput="searchStores()">
+  </div>
 
   <!-- 頁面底部導航列 -->
   <div id="bottom-nav" class="d-flex">
