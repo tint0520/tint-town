@@ -2,61 +2,171 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <title>Tint Town 美業地圖</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
+    <title>Tint Town 美業地圖 + 滑卡模式</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body, html {
+        height: 100%;
+        font-family: 'Noto Sans TC', sans-serif;
+        background: #fff7f9;
+        overflow: hidden;
+      }
+      #map {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: 1;
+      }
+      #toggle-mode-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 999;
+        background: #ffe6eb;
+        color: #d06e6e;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        cursor: pointer;
+      }
+      #swipe-view {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: #fff0f4;
+        z-index: 2;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+      .swipe-card {
+        width: 90%;
+        max-width: 340px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+        padding: 16px;
+        text-align: center;
+      }
+      .swipe-card img {
+        width: 100%;
+        border-radius: 12px;
+        height: 200px;
+        object-fit: cover;
+      }
+      .swipe-card h3 {
+        margin: 10px 0 4px;
+        color: #d06e6e;
+      }
+      .swipe-card p {
+        font-size: 14px;
+        color: #555;
+        margin-bottom: 10px;
+      }
+      .swipe-buttons {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 10px;
+      }
+      .swipe-buttons button {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .swipe-buttons .nope {
+        background: #eee;
+        color: #999;
+      }
+      .swipe-buttons .like {
+        background: #f7c5cc;
+        color: white;
+      }
+    </style>
   </head>
   <body>
-    <div id="tabs">
-      <button onclick="switchLayer('town')">Tint Town</button>
-      <button onclick="switchLayer('model')">Tint Model</button>
-      <button onclick="switchLayer('rent')">Tint Rent</button>
-    </div>
-
-    <div id="filter-box">
-      <div class="filter-section" data-layer="town">
-        <strong>服務項目：</strong><br>
-        <label><input type="checkbox" class="type-filter" value="美甲" checked> 美甲</label><br>
-        <label><input type="checkbox" class="type-filter" value="美睫" checked> 美睫</label><br>
-        <label><input type="checkbox" class="type-filter" value="紋繡" checked> 紋繡</label><br>
-      </div>
-
-      <div class="filter-section" data-layer="model" style="display: none;">
-        <strong>招募條件：</strong><br>
-        <label><input type="checkbox" class="offer-filter" value="互惠" checked> 互惠</label><br>
-        <label><input type="checkbox" class="offer-filter" value="付費" checked> 付費</label><br>
-      </div>
-
-      <div class="filter-section" data-layer="rent" style="display: none;">
-        <em>（目前無額外篩選）</em>
-      </div>
-    </div>
-
     <div id="map"></div>
+    <button id="toggle-mode-btn" onclick="toggleMode()">💘 滑卡模式</button>
 
-    <div id="info-card" style="display: none;">
-      <div class="card-inner">
-        <button class="close-btn" onclick="closeCard()">✖</button>
-        <img id="card-img" src="" alt="照片" />
-        <div class="card-content">
-          <h3 id="card-title">店家名稱</h3>
-          <p id="card-desc">描述文字</p>
-          <div id="card-address">📍 地址</div>
-          <a id="card-link" href="#" target="_blank">🔗 看更多</a>
-          <div class="share-buttons">
-            <a id="line-share-btn" href="#" target="_blank">💬 LINE</a>
-            <button id="threads-copy-btn" onclick="copyToThreads()">📎 Threads</button>
-            <a id="ig-link-btn" href="#" target="_blank">📷 IG</a>
-            <button onclick="copyLink()">🔗 複製連結</button>
-          </div>
-          <button id="fav-btn" onclick="toggleFavorite()">🤍 收藏</button>
+    <div id="swipe-view">
+      <div class="swipe-card" id="swipe-card">
+        <img id="swipe-img" src="" alt="圖片" />
+        <h3 id="swipe-name">店家名稱</h3>
+        <p id="swipe-desc">描述</p>
+        <div class="swipe-buttons">
+          <button class="nope" onclick="nextCard()">🙅‍♀️</button>
+          <button class="like" onclick="likeCard()">💖</button>
         </div>
       </div>
     </div>
 
-    <script src="script.js"></script>
-    <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap">
+    <script>
+      let mode = 'map';
+      let swipeData = [
+        {
+          name: 'Coco 美甲',
+          desc: '粉嫩日系風，使用日本凝膠',
+          photo: 'https://i.imgur.com/Vs6fE3r.png'
+        },
+        {
+          name: 'Lash Queen',
+          desc: '專做自然款睫毛，輕盈不厚重',
+          photo: 'https://i.imgur.com/yLwuDkm.jpg'
+        },
+        {
+          name: '霧眉小舖',
+          desc: '霧眉＋清粉設計，適合初學者',
+          photo: 'https://i.imgur.com/Lw2Pml9.jpg'
+        }
+      ];
+      let currentCard = 0;
+
+      function toggleMode() {
+        if (mode === 'map') {
+          document.getElementById('swipe-view').style.display = 'flex';
+          document.getElementById('map').style.display = 'none';
+          document.getElementById('toggle-mode-btn').textContent = '🗺️ 地圖模式';
+          mode = 'swipe';
+          showCard(currentCard);
+        } else {
+          document.getElementById('swipe-view').style.display = 'none';
+          document.getElementById('map').style.display = 'block';
+          document.getElementById('toggle-mode-btn').textContent = '💘 滑卡模式';
+          mode = 'map';
+        }
+      }
+
+      function showCard(index) {
+        const data = swipeData[index];
+        if (!data) {
+          document.getElementById('swipe-card').innerHTML = '<p>✨ 沒有更多推薦了！</p>';
+          return;
+        }
+        document.getElementById('swipe-img').src = data.photo;
+        document.getElementById('swipe-name').textContent = data.name;
+        document.getElementById('swipe-desc').textContent = data.desc;
+      }
+
+      function nextCard() {
+        currentCard++;
+        showCard(currentCard);
+      }
+
+      function likeCard() {
+        const liked = swipeData[currentCard];
+        let favs = JSON.parse(localStorage.getItem("tintFavs") || "[]");
+        if (!favs.includes(liked.name)) favs.push(liked.name);
+        localStorage.setItem("tintFavs", JSON.stringify(favs));
+        nextCard();
+      }
     </script>
+     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
   </body>
 </html>
