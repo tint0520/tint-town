@@ -64,12 +64,17 @@
     }
     #controls {
       position: fixed;
-      top: 20px;
-      left: 20px;
+      top: 10px;
+      left: 10px;
       z-index: 999;
       display: flex;
       flex-direction: column;
       gap: 10px;
+    }
+    .control-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
     }
     #controls button, #filter-bar select {
       background: #ffe6eb;
@@ -81,11 +86,8 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: pointer;
     }
-    #filter-bar {
-      position: fixed;
-      top: 120px;
-      left: 20px;
-      z-index: 999;
+    #filter-bar select {
+      padding: 8px 12px;
     }
     #popup {
       position: fixed;
@@ -121,20 +123,21 @@
   </div>
 
   <div id="controls">
-    <button onclick="switchView('home')">🏠 首頁</button>
-    <button onclick="switchView('map')">🗺 地圖模式</button>
-    <button onclick="switchView('swipe')">💘 滑卡模式</button>
-    <button onclick="goToMyLocation()">📍 我在這附近</button>
-  </div>
-
-  <div id="filter-bar">
-    <select id="typeFilter" onchange="applyTypeFilter()">
-      <option value="">全部類型</option>
-      <option value="美甲">美甲</option>
-      <option value="美睫">美睫</option>
-      <option value="紋繡">紋繡</option>
-      <option value="皮膚管理">皮膚管理</option>
-    </select>
+    <div class="control-row">
+      <button onclick="switchView('home')">🏠 首頁</button>
+      <button onclick="switchView('map')">🗺 地圖模式</button>
+      <button onclick="switchView('swipe')">💘 滑卡模式</button>
+    </div>
+    <div class="control-row">
+      <select id="typeFilter" onchange="applyTypeFilter()">
+        <option value="">全部類型</option>
+        <option value="美甲">美甲</option>
+        <option value="美睫">美睫</option>
+        <option value="紋繡">紋繡</option>
+        <option value="皮膚管理">皮膚管理</option>
+      </select>
+      <button onclick="goToMyLocation()">📍 我現在位置</button>
+    </div>
   </div>
 
   <div id="map-view" class="view"></div>
@@ -149,6 +152,7 @@
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/1YsGmD_2EtrwjypWZqMU1n9H_pn-6NhZQcawC_-CpAN8/gviz/tq?sheet=tint%20test";
     let map, userMarker, userLocation = null;
     let rawData = [], swipeData = [], currentCard = 0;
+    let mapMarkers = [];
 
     function switchView(mode) {
       ['map-view','swipe-view','home-view'].forEach(id => document.getElementById(id).style.display = 'none');
@@ -237,6 +241,30 @@
       });
       swipeData.sort((a, b) => a.distance - b.distance);
       showSwipeCard(currentCard);
+      loadMarkers();
+    }
+
+    function loadMarkers() {
+      mapMarkers.forEach(m => m.setMap(null));
+      mapMarkers = [];
+      swipeData.forEach(d => {
+        if (!d.latlng.includes(",")) return;
+        const [lat, lng] = d.latlng.split(",").map(Number);
+        const marker = new google.maps.Marker({
+          position: { lat, lng },
+          map,
+          title: d.name,
+          icon: {
+            url: "http://maps.google.com/mapfiles/ms/icons/pink-dot.png",
+            scaledSize: new google.maps.Size(40, 40)
+          }
+        });
+        const info = new google.maps.InfoWindow({
+          content: `<strong>${d.name}</strong><br>${d.desc}<br><small>${d.address}</small>`
+        });
+        marker.addListener("click", () => info.open(map, marker));
+        mapMarkers.push(marker);
+      });
     }
 
     function showSwipeCard(i) {
