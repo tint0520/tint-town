@@ -38,7 +38,7 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    .favorite-btn { cursor: pointer; color: #e74c3c; }
+    .favorite-btn { cursor: pointer; }
 
     #my-location-btn {
       position: fixed;
@@ -125,6 +125,8 @@
     }
 
     function showStoreCard(store) {
+      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      const isFavorited = favorites.includes(store.name);
       const card = document.getElementById('store-card');
       card.innerHTML = `
         <img src="${store.photo || ''}" class="img-fluid">
@@ -133,7 +135,7 @@
           <p>${store.desc || ''}</p>
           <p>📍 ${store.address || ''}</p>
           <p>⏰ ${store.hours || ''}</p>
-          <button class="favorite-btn btn btn-light" onclick="toggleFavorite('${store.name}')">❤️ 收藏</button>
+          <button class="favorite-btn btn btn-${isFavorited ? 'danger' : 'light'}" onclick="toggleFavorite('${store.name}')">❤️ ${isFavorited ? '已收藏' : '收藏'}</button>
         </div>`;
       card.style.display = 'block';
     }
@@ -142,12 +144,11 @@
       let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
       if (favorites.includes(storeName)) {
         favorites = favorites.filter(name => name !== storeName);
-        alert(`${storeName} 已移除收藏`);
       } else {
         favorites.push(storeName);
-        alert(`${storeName} 收藏成功！`);
       }
       localStorage.setItem('favorites', JSON.stringify(favorites));
+      loadStoreData();
     }
 
     function goToMyLocation() {
