@@ -2,17 +2,61 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tint Town 美業地圖</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <div id="tabs">
+      <button onclick="switchLayer('town')">Tint Town</button>
+      <button onclick="switchLayer('model')">Tint Model</button>
+      <button onclick="switchLayer('rent')">Tint Rent</button>
+    </div>
+
+    <div id="filter-box">
+      <div class="filter-section" data-layer="town">
+        <strong>服務項目：</strong><br>
+        <label><input type="checkbox" class="type-filter" value="美甲" checked> 美甲</label><br>
+        <label><input type="checkbox" class="type-filter" value="美睫" checked> 美睫</label><br>
+        <label><input type="checkbox" class="type-filter" value="紋繡" checked> 紋繡</label><br>
+      </div>
+
+      <div class="filter-section" data-layer="model" style="display: none;">
+        <strong>招募條件：</strong><br>
+        <label><input type="checkbox" class="offer-filter" value="互惠" checked> 互惠</label><br>
+        <label><input type="checkbox" class="offer-filter" value="付費" checked> 付費</label><br>
+      </div>
+
+      <div class="filter-section" data-layer="rent" style="display: none;">
+        <em>（目前無額外篩選）</em>
+      </div>
+    </div>
+
     <div id="map"></div>
 
+    <div id="info-card" style="display: none;">
+      <div class="card-inner">
+        <button class="close-btn" onclick="closeCard()">✖</button>
+        <img id="card-img" src="" alt="照片" />
+        <div class="card-content">
+          <h3 id="card-title">店家名稱</h3>
+          <p id="card-desc">描述文字</p>
+          <div id="card-address">📍 地址</div>
+          <a id="card-link" href="#" target="_blank">🔗 看更多</a>
+          <div class="share-buttons">
+            <a id="line-share-btn" href="#" target="_blank">💬 LINE</a>
+            <button id="threads-copy-btn" onclick="copyToThreads()">📎 Threads</button>
+            <a id="ig-link-btn" href="#" target="_blank">📷 IG</a>
+            <button onclick="copyLink()">🔗 複製連結</button>
+          </div>
+          <button id="fav-btn" onclick="toggleFavorite()">🤍 收藏</button>
+        </div>
+      </div>
+    </div>
+
     <script src="script.js"></script>
-    <script async
-     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap">
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap">
     </script>
   </body>
 </html>
-    
