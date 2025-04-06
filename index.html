@@ -5,22 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tint Town 美業地圖 + 滑卡模式</title>
     <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      body, html {
-        height: 100%;
-        font-family: 'Noto Sans TC', sans-serif;
-        background: #fff7f9;
-        overflow: hidden;
-      }
-      #map {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        z-index: 1;
-      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; font-family: 'Noto Sans TC', sans-serif; background: #fff7f9; overflow: hidden; }
+      #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; }
       #toggle-mode-btn {
         position: fixed;
         top: 20px;
@@ -60,20 +47,9 @@
         height: 200px;
         object-fit: cover;
       }
-      .swipe-card h3 {
-        margin: 10px 0 4px;
-        color: #d06e6e;
-      }
-      .swipe-card p {
-        font-size: 14px;
-        color: #555;
-        margin-bottom: 10px;
-      }
-      .swipe-buttons {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 10px;
-      }
+      .swipe-card h3 { margin: 10px 0 4px; color: #d06e6e; }
+      .swipe-card p { font-size: 14px; color: #555; margin-bottom: 10px; }
+      .swipe-buttons { display: flex; justify-content: space-around; margin-top: 10px; }
       .swipe-buttons button {
         padding: 10px 16px;
         border: none;
@@ -81,14 +57,8 @@
         font-size: 16px;
         cursor: pointer;
       }
-      .swipe-buttons .nope {
-        background: #eee;
-        color: #999;
-      }
-      .swipe-buttons .like {
-        background: #f7c5cc;
-        color: white;
-      }
+      .swipe-buttons .nope { background: #eee; color: #999; }
+      .swipe-buttons .like { background: #f7c5cc; color: white; }
     </style>
   </head>
   <body>
@@ -109,24 +79,12 @@
 
     <script>
       let mode = 'map';
-      let swipeData = [
-        {
-          name: 'Coco 美甲',
-          desc: '粉嫩日系風，使用日本凝膠',
-          photo: 'https://i.imgur.com/Vs6fE3r.png'
-        },
-        {
-          name: 'Lash Queen',
-          desc: '專做自然款睫毛，輕盈不厚重',
-          photo: 'https://i.imgur.com/yLwuDkm.jpg'
-        },
-        {
-          name: '霧眉小舖',
-          desc: '霧眉＋清粉設計，適合初學者',
-          photo: 'https://i.imgur.com/Lw2Pml9.jpg'
-        }
-      ];
+      let swipeData = [];
       let currentCard = 0;
+
+      const SHEET_ID = "1YsGmD_2EtrwjypWZqMU1n9H_pn-6NhZQcawC_-CpAN8";
+      const SHEET_NAME = "tint test";
+      const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}`;
 
       function toggleMode() {
         if (mode === 'map') {
@@ -149,7 +107,7 @@
           document.getElementById('swipe-card').innerHTML = '<p>✨ 沒有更多推薦了！</p>';
           return;
         }
-        document.getElementById('swipe-img').src = data.photo;
+        document.getElementById('swipe-img').src = data.photo || 'https://i.imgur.com/Vs6fE3r.png';
         document.getElementById('swipe-name').textContent = data.name;
         document.getElementById('swipe-desc').textContent = data.desc;
       }
@@ -167,12 +125,54 @@
         nextCard();
       }
 
+      async function initMap() {
+        const map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 25.034, lng: 121.564 },
+          zoom: 12,
+        });
+
+        const res = await fetch(SHEET_URL);
+        const text = await res.text();
+        const json = JSON.parse(text.substr(47).slice(0, -2));
+        const rows = json.table.rows;
+
+        swipeData = rows.map(row => ({
+          name: row.c[0]?.v || "",
+          link: row.c[1]?.v || "",
+          type: row.c[2]?.v || "",
+          tags: row.c[3]?.v || "",
+          desc: row.c[4]?.v || "",
+          latlng: row.c[5]?.v || "",
+          address: row.c[6]?.v || "",
+          photo: row.c[7]?.v || "https://i.imgur.com/Vs6fE3r.png"
+        }));
+
+        swipeData.forEach((data) => {
+          if (!data.latlng.includes(",")) return;
+          const [lat, lng] = data.latlng.split(",").map(Number);
+          const marker = new google.maps.Marker({
+            position: { lat, lng },
+            map,
+            title: data.name
+          });
+
+          const info = new google.maps.InfoWindow({
+            content: `
+              <div>
+                <strong>${data.name}</strong><br/>
+                ${data.desc}<br/>
+                <a href="${data.link}" target="_blank">🔗 看店家</a><br/>
+                <small>${data.address}</small>
+              </div>
+            `
+          });
+          marker.addListener("click", () => info.open(map, marker));
+        });
+      }
+
+      window.initMap = initMap;
     </script>
 
-    <!-- 👇 外部 JS 放這裡 -->
-    <script src="script.js"></script>
-
-    <!-- 👇 Google Maps API 正確格式 -->
     <script async defer
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap">
     </script>
