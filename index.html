@@ -108,10 +108,14 @@ let userLocation;
 
       // 建立店家圖標(marker)並放到地圖上
       const marker = new google.maps.Marker({ 
-        position: { lat, lng }, 
-        map,
-        title: store.name 
-      });
+  position: { lat, lng }, 
+  map, 
+  title: store.name,
+  icon: {
+    url: "https://github.com/tint0520/tint-town/blob/main/local_mall_30dp_EECECD_FILL1_wght400_GRAD0_opsz24.png?raw=true",
+    scaledSize: new google.maps.Size(35, 35), // 自訂圖標大小（你可調整數值）
+  }
+});
 
       // 點擊地圖圖標(marker)後跳出該店家卡片
       marker.addListener('click', () => {
