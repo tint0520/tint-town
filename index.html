@@ -12,11 +12,9 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
-    /* 設定頁面基本樣式，讓地圖填滿整個頁面 */
     html, body, #map-view { height: 100%; }
     body { font-family: 'Noto Sans TC', sans-serif; }
 
-    /* 固定在頁面底部的導航列 */
     #bottom-nav {
       position: fixed;
       bottom: 0;
@@ -27,87 +25,92 @@
     }
     .nav-btn { flex: 1; padding: 10px; text-align: center; color: #555; }
 
-    /* 控制視圖顯示與隱藏 */
     .view { display: none; padding-bottom: 60px; }
     .active-view { display: flex; flex-direction: column; }
 
-    /* 頁面標頭樣式 */
     #app-header { padding: 20px; text-align: center; background-color: #f8f9fa; }
 
-    /* 收藏按鈕樣式 */
     .favorite-btn { cursor: pointer; color: #e74c3c; }
 
-    /* 搜尋欄樣式 */
     #search-bar {
       padding: 10px;
       background-color: #fff;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+
+    #my-location-btn {
+      position: absolute;
+      bottom: 80px;
+      right: 10px;
+      z-index: 5;
+    }
+
+    .tag-btn {
+      margin: 2px;
+      padding: 5px 10px;
+      cursor: pointer;
+      background-color: #f1f1f1;
+      border-radius: 5px;
+      display: inline-block;
+    }
+    .tag-btn.active { background-color: #007bff; color: white; }
   </style>
 
-  <!-- 載入 CSV 資料處理套件 (PapaParse) -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
-  <!-- 載入 MarkerClusterer 套件 -->
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-
-  <!-- Google Maps JavaScript API（記得換上你的API金鑰） -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
 
   <script defer>
-    // 設定你的 Google Sheets CSV 連結
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
 
-    let map; // 存放地圖的變數
-    let markers = []; // 存放所有標記的陣列
+    let map;
+    let markers = [];
+    let allStores = [];
 
-    // 初始化地圖
     function initMap() {
       map = new google.maps.Map(document.getElementById("map-view"), {
         center: { lat: 25.034, lng: 121.564 },
         zoom: 12,
       });
-      loadStoreData(); // 載入店家資料到地圖上
+      loadStoreData();
     }
 
-    // 從Google Sheets載入店家資料並顯示在地圖上
     function loadStoreData() {
       Papa.parse(SHEET_URL, {
         download: true,
         header: true,
         complete: function(results) {
           markers = [];
+          allStores = results.data;
 
-          results.data.forEach(store => {
-            if (!store.latlng || !store.latlng.includes(",")) return;
-            const [lat, lng] = store.latlng.split(",").map(Number);
-
-            // 建立店家地圖標記
-            const marker = new google.maps.Marker({ position: { lat, lng }, title: store.name, map });
-
-            // 點擊地圖標記時顯示的店家資訊視窗（含收藏按鈕）
-            const infoContent = `
-              <h6>${store.name}</h6>
-              <p>${store.desc || ''}</p>
-              <p>📍 ${store.address || ''}</p>
-              <p>⏰ ${store.hours || ''}</p>
-              ${store.photo ? `<img src="${store.photo}" class="img-fluid rounded">` : ''}
-              <br><button class="favorite-btn btn btn-light" onclick="toggleFavorite('${store.name}')">❤️ 收藏/取消收藏</button>
-            `;
-
-            const infoWindow = new google.maps.InfoWindow({ content: infoContent });
-            marker.addListener('click', () => infoWindow.open(map, marker));
-
-            markers.push(marker);
-          });
-
-          // 將標記群組化，使用 MarkerClusterer 優化地圖效能
+          results.data.forEach(store => createMarker(store));
           new markerClusterer.MarkerClusterer({ markers, map });
+          generateTagFilters();
         }
       });
     }
 
-    // 收藏或取消收藏店家
+    function createMarker(store) {
+      if (!store.latlng || !store.latlng.includes(",")) return;
+      const [lat, lng] = store.latlng.split(",").map(Number);
+
+      const marker = new google.maps.Marker({ position: { lat, lng }, title: store.name, map });
+
+      const infoContent = `
+        <h6>${store.name}</h6>
+        <p>${store.desc || ''}</p>
+        <p>📍 ${store.address || ''}</p>
+        <p>⏰ ${store.hours || ''}</p>
+        ${store.photo ? `<img src="${store.photo}" class="img-fluid rounded">` : ''}
+        <br><button class="favorite-btn btn btn-light" onclick="toggleFavorite('${store.name}')">❤️ 收藏/取消收藏</button>
+      `;
+
+      const infoWindow = new google.maps.InfoWindow({ content: infoContent });
+      marker.addListener('click', () => infoWindow.open(map, marker));
+
+      markers.push(marker);
+    }
+
     function toggleFavorite(storeName) {
       let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
       if (favorites.includes(storeName)) {
@@ -120,25 +123,36 @@
       localStorage.setItem('favorites', JSON.stringify(favorites));
     }
 
-    // 即時搜尋店家功能
     function searchStores() {
       const query = document.getElementById('search-input').value.toLowerCase();
-      markers.forEach(marker => {
-        const match = marker.getTitle().toLowerCase().includes(query);
-        marker.setVisible(match);
+      markers.forEach(marker => marker.setVisible(marker.getTitle().toLowerCase().includes(query)));
+    }
+
+    function goToMyLocation() {
+      navigator.geolocation.getCurrentPosition(pos => {
+        map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        map.setZoom(15);
+      }, () => alert('無法取得你的定位'));
+    }
+
+    function generateTagFilters() {
+      const tags = new Set(allStores.flatMap(store => store.tags?.split(",") || []));
+      const tagContainer = document.getElementById('tag-filter');
+      tags.forEach(tag => {
+        const btn = document.createElement('span');
+        btn.textContent = tag;
+        btn.className = 'tag-btn';
+        btn.onclick = () => filterByTag(tag, btn);
+        tagContainer.appendChild(btn);
       });
     }
 
-    // 開始使用App，隱藏初始彈窗並顯示首頁
-    function startApp() { 
-      document.getElementById("popup").style.display = "none"; 
-      switchView("home"); 
+    function filterByTag(tag, btn) {
+      document.querySelectorAll('.tag-btn').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+      markers.forEach((marker, i) => marker.setVisible(allStores[i].tags?.includes(tag)));
     }
 
-    // 開始探索，切換到地圖頁面
-    function startExploring() { switchView('map'); }
-
-    // 視圖切換函數（首頁與地圖間切換）
     function switchView(view) {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
       document.getElementById(`${view}-view`).classList.add('active-view');
@@ -146,26 +160,15 @@
   </script>
 </head>
 <body>
-  <!-- 頁面頂部標頭區域 -->
-  <div id="app-header">
-    <h5>Tint Maps</h5>
-    <p>找附近的美業店家</p>
-  </div>
+  <div id="app-header"><h5>Tint Maps</h5><p>找附近的美業店家</p></div>
 
-  <!-- 首頁內容區域 -->
-  <div id="home-view" class="view active-view container">
-    <h4 class="mt-4">歡迎來到 Tint Town</h4>
-    <button class="btn btn-primary mt-3" onclick="startExploring()">開始探索</button>
-  </div>
-
-  <!-- 地圖顯示區域（含搜尋欄） -->
-  <div id="map-view" class="view">
+  <div id="map-view" class="view active-view">
     <input id="search-input" class="form-control" placeholder="搜尋店家名稱" oninput="searchStores()">
+    <div id="tag-filter" class="p-2"></div>
+    <button id="my-location-btn" class="btn btn-primary" onclick="goToMyLocation()">📍回到我的位置</button>
   </div>
 
-  <!-- 頁面底部導航列 -->
   <div id="bottom-nav" class="d-flex">
-    <div class="nav-btn" onclick="switchView('home')">🏠<br>首頁</div>
     <div class="nav-btn" onclick="switchView('map')">🗺<br>地圖</div>
   </div>
 </body>
