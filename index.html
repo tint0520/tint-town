@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tint Maps 美業地圖 App</title>
 
-  <!-- 載入字型與CSS框架 -->
+  <!-- 字型與框架 -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css"/>
@@ -13,7 +13,15 @@
   <style>
     html, body { height: 100%; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
 
-    #map-view, #card-view, #favorite-view { display: none; height: calc(100% - 60px); }
+    #map-view, #card-view, #favorite-view { display: none; height: calc(100% - 110px); }
+
+    .top-banner {
+      width: 100%; height: 50px; background-color: #ffe4ec;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .banner-text { font-size: 20px; color: #d63384; font-weight: bold; }
 
     #bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
@@ -23,48 +31,69 @@
 
     .nav-btn { flex: 1; padding: 10px; text-align: center; color: #555; font-size:14px; }
 
-    .swiper-container { height: 50%; padding-top: 15px; }
+    .swiper-container { height: 55%; padding-top: 10px; }
 
     .swiper-slide {
-      width: 72%; border-radius: 12px; box-shadow: 0 1.6px 6.4px rgba(0,0,0,0.15);
+      width: 80%; border-radius: 12px; box-shadow: 0 1.6px 6.4px rgba(0,0,0,0.15);
       overflow-y: auto; background-color: #fff;
     }
 
-    .swiper-slide img { height: 150px; object-fit: cover; width: 100%; }
+    .swiper-slide img { height: 160px; object-fit: cover; width: 100%; }
 
-    .store-info { padding: 10px; }
-
-    .close-btn {
-      position: absolute; right: 10px; top: 10px; background-color: rgba(0,0,0,0.5);
-      color: white; border-radius: 50%; width: 25px; height: 25px; display: flex;
-      align-items: center; justify-content: center; cursor: pointer;
-    }
-
-    .top-banner {
-      width: 100%; height: 50px; background-color: #ffffff; text-align: center;
-      padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    .banner-img { height: 100%; object-fit: contain; }
+    .store-info { padding: 10px; font-size:14px; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-
-    
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
-    
+ <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
   <script defer>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
+   const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
+
     function initMap() {
       map = new google.maps.Map(document.getElementById("map-view"), { center: { lat: 25.034, lng: 121.564 }, zoom: 14 });
-      navigator.geolocation.getCurrentPosition(pos => {
-        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        map.setCenter(userLocation);
-      });
+      navigator.geolocation.getCurrentPosition(pos => map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }));
       loadStoreData();
       showView('map-view');
+    }
+
+    function loadStoreData() {
+      Papa.parse(SHEET_URL, { download: true, header: true, complete: results => {
+        stores = results.data;
+        markers.forEach(m => m.setMap(null)); markers = [];
+
+        stores.forEach(store => {
+          if (!store.latlng) return;
+          const [lat, lng] = store.latlng.split(",").map(Number);
+          const marker = new google.maps.Marker({ position: { lat, lng }, map });
+          markers.push(marker);
+        });
+
+        new markerClusterer.MarkerClusterer({ markers, map });
+        initSwiper();
+      }});
+    }
+
+    function initSwiper() {
+      const swiperWrapper = document.querySelector('.swiper-wrapper');
+      swiperWrapper.innerHTML = stores.map(store => `
+        <div class="swiper-slide">
+          <img src="${store.photo}" alt="${store.name}">
+          <div class="store-info">
+            <h5>${store.name}</h5>
+            <p>${store.desc}</p>
+            <p>類型：${store.type} | 標籤：${store.tags}</p>
+            <p>地址：${store.address}</p>
+            <p>營業時間：${store.hours}</p>
+            <p>
+              <a href="${store.link}" target="_blank">🔗 網站</a> |
+              <a href="${store.ig}" target="_blank">📸 IG</a> |
+              <a href="${store.line}" target="_blank">💬 LINE</a>
+            </p>
+          </div>
+        </div>`).join('');
+
+      new Swiper('.swiper-container', { slidesPerView: 'auto', spaceBetween: 15, centeredSlides: true });
     }
 
     function showView(viewId) {
@@ -76,7 +105,7 @@ const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78h
 </head>
 <body>
   <div class="top-banner">
-    <img src="你的Banner圖片網址" alt="Tint Maps 美業地圖" class="banner-img">
+    <span class="banner-text">Tint Maps</span>
   </div>
 
   <div id="map-view"></div>
