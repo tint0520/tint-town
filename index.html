@@ -38,6 +38,9 @@
   <!-- 載入 CSV 資料處理套件 (PapaParse) -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
+  <!-- 載入 MarkerClusterer 套件 -->
+  <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+
   <!-- Google Maps JavaScript API（記得換上你的API金鑰） -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
 
@@ -62,12 +65,14 @@
         download: true,
         header: true,
         complete: function(results) {
+          const markers = [];
+
           results.data.forEach(store => {
             if (!store.latlng || !store.latlng.includes(",")) return;
             const [lat, lng] = store.latlng.split(",").map(Number);
 
             // 建立店家地圖標記
-            const marker = new google.maps.Marker({ position: { lat, lng }, map, title: store.name });
+            const marker = new google.maps.Marker({ position: { lat, lng }, title: store.name });
 
             // 點擊地圖標記時顯示的店家資訊視窗
             const infoContent = `
@@ -79,9 +84,13 @@
             `;
 
             const infoWindow = new google.maps.InfoWindow({ content: infoContent });
-
             marker.addListener('click', () => infoWindow.open(map, marker));
+
+            markers.push(marker);
           });
+
+          // 將標記群組化，使用 MarkerClusterer 優化地圖效能
+          new markerClusterer.MarkerClusterer({ markers, map });
         }
       });
     }
