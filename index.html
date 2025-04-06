@@ -3,76 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tint Town 美業地圖 + 滑卡模式</title>
+  <title>Tint Town 滑卡收藏版</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; font-family: 'Noto Sans TC', sans-serif; background: #fff7f9; overflow: hidden; }
-
-    #map, #swipe-view, #fav-view {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    html, body {
+      height: 100%;
+      font-family: 'Noto Sans TC', sans-serif;
+      background: #fff7f9;
+      overflow: hidden;
     }
-
-    #map { z-index: 1; }
-    #swipe-view, #fav-view {
-      background: #fff0f4;
-      z-index: 2;
-      display: none;
-      justify-content: center;
+    #card-container, #fav-list {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
       align-items: center;
+      justify-content: center;
       flex-direction: column;
+      background: #fff0f4;
+      z-index: 1;
     }
-
-    .swipe-card, .fav-card {
-      width: 90%; max-width: 340px;
+    .card {
+      width: 90%;
+      max-width: 320px;
       background: white;
       border-radius: 16px;
       box-shadow: 0 6px 24px rgba(0,0,0,0.1);
       padding: 16px;
       text-align: center;
-      margin-bottom: 20px;
+      position: absolute;
+      transition: transform 0.4s ease, opacity 0.4s ease;
     }
-
-    .swipe-card img, .fav-card img {
-      width: 100%; border-radius: 12px;
-      height: 200px; object-fit: cover;
+    .card img {
+      width: 100%;
+      border-radius: 12px;
+      height: 200px;
+      object-fit: cover;
     }
-
-    .swipe-card h3, .fav-card h3 { margin: 10px 0 4px; color: #d06e6e; }
-    .swipe-card p, .fav-card p { font-size: 14px; color: #555; margin-bottom: 10px; }
-
-    .swipe-buttons, .fav-buttons {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 10px;
+    .card h3 {
+      margin: 10px 0 4px;
+      color: #d06e6e;
     }
-
-    .swipe-buttons button, .fav-buttons button {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 20px;
-      font-size: 16px;
-      cursor: pointer;
+    .card p {
+      font-size: 14px;
+      color: #555;
     }
-
-    .swipe-buttons .nope, .fav-buttons .remove {
-      background: #eee; color: #999;
+    #fav-list {
+      display: none;
+      padding: 20px;
+      overflow-y: scroll;
     }
-    .swipe-buttons .like, .fav-buttons .link {
-      background: #f7c5cc; color: white;
+    .fav-item {
+      width: 90%;
+      max-width: 320px;
+      background: white;
+      border-radius: 12px;
+      padding: 12px;
+      margin: 10px 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-
-    #top-buttons {
+    .fav-item strong { color: #d06e6e; font-size: 16px; }
+    .fav-item small { display: block; margin-top: 4px; color: #888; font-size: 12px; }
+    #toggle-btn {
       position: fixed;
       top: 20px;
       right: 20px;
-      z-index: 999;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    #top-buttons button {
       background: #ffe6eb;
       color: #d06e6e;
       border: none;
@@ -81,180 +76,125 @@
       font-size: 14px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: pointer;
+      z-index: 999;
     }
   </style>
 </head>
 <body>
-  <div id="map"></div>
-  <div id="top-buttons">
-    <button onclick="toggleMode('swipe')">💘 滑卡模式</button>
-    <button onclick="toggleMode('fav')">💖 收藏清單</button>
-    <button onclick="centerOnUser()">📍 我在這附近</button>
-  </div>
-
-  <div id="swipe-view"></div>
-  <div id="fav-view"></div>
+  <button id="toggle-btn" onclick="toggleView()">📋 收藏清單</button>
+  <div id="card-container"></div>
+  <div id="fav-list"></div>
 
   <script>
-    let mode = 'map';
-    let swipeData = [];
-    let currentCard = 0;
-    let map;
-    let userMarker;
-
     const SHEET_ID = "1YsGmD_2EtrwjypWZqMU1n9H_pn-6NhZQcawC_-CpAN8";
     const SHEET_NAME = "tint test";
     const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}`;
 
-    function toggleMode(target) {
-      document.getElementById('swipe-view').style.display = 'none';
-      document.getElementById('fav-view').style.display = 'none';
-      document.getElementById('map').style.display = 'none';
-      if (target === 'swipe') {
-        mode = 'swipe';
-        document.getElementById('swipe-view').style.display = 'flex';
-        showSwipeCard(currentCard);
-      } else if (target === 'fav') {
-        mode = 'fav';
-        renderFavorites();
-        document.getElementById('fav-view').style.display = 'flex';
-      } else {
-        mode = 'map';
-        document.getElementById('map').style.display = 'block';
-      }
-    }
+    let allData = [];
+    let currentIndex = 0;
+    let container = document.getElementById('card-container');
+    let favList = document.getElementById('fav-list');
+    let showingFavs = false;
 
-    function showSwipeCard(index) {
-      const view = document.getElementById('swipe-view');
-      view.innerHTML = '';
-      const data = swipeData[index];
-      if (!data) {
-        view.innerHTML = '<div class="swipe-card">✨ 沒有更多推薦了！</div>';
-        return;
-      }
-      const card = document.createElement('div');
-      card.className = 'swipe-card';
-      card.innerHTML = `
-        <img src="${data.photo}" alt="圖片" />
-        <h3>${data.name}</h3>
-        <p>${data.desc}</p>
-        <div class="swipe-buttons">
-          <button class="nope" onclick="nextCard()">🙅‍♀️</button>
-          <button class="like" onclick="likeCard()">💖</button>
-        </div>`;
-      view.appendChild(card);
-    }
-
-    function nextCard() {
-      currentCard++;
-      showSwipeCard(currentCard);
-    }
-
-    function likeCard() {
-      const liked = swipeData[currentCard];
-      let favs = JSON.parse(localStorage.getItem("tintFavs") || "[]");
-      if (!favs.includes(liked.name)) favs.push(liked.name);
-      localStorage.setItem("tintFavs", JSON.stringify(favs));
-      nextCard();
-    }
-
-    function renderFavorites() {
-      const favData = JSON.parse(localStorage.getItem("tintFavs") || "[]");
-      const view = document.getElementById('fav-view');
-      view.innerHTML = '';
-      if (!favData.length) {
-        view.innerHTML = '<div class="fav-card">你還沒有收藏任何店家 💔</div>';
-        return;
-      }
-      favData.forEach(name => {
-        const data = swipeData.find(d => d.name === name);
-        if (!data) return;
-        const card = document.createElement('div');
-        card.className = 'fav-card';
-        card.innerHTML = `
-          <img src="${data.photo}" alt="圖片" />
-          <h3>${data.name}</h3>
-          <p>${data.desc}</p>
-          <div class="fav-buttons">
-            <button class="remove" onclick="removeFavorite('${data.name}')">移除</button>
-            <button class="link" onclick="window.open('${data.link}', '_blank')">看連結</button>
-          </div>`;
-        view.appendChild(card);
-      });
-    }
-
-    function removeFavorite(name) {
-      let favs = JSON.parse(localStorage.getItem("tintFavs") || "[]");
-      favs = favs.filter(n => n !== name);
-      localStorage.setItem("tintFavs", JSON.stringify(favs));
-      renderFavorites();
-    }
-
-    function centerOnUser() {
-      if (!navigator.geolocation) return alert("無法取得定位資訊。");
-      navigator.geolocation.getCurrentPosition(pos => {
-        const { latitude, longitude } = pos.coords;
-        map.setCenter({ lat: latitude, lng: longitude });
-        if (!userMarker) {
-          userMarker = new google.maps.Marker({
-            position: { lat: latitude, lng: longitude },
-            map,
-            title: "你的位置",
-            icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-          });
-        } else {
-          userMarker.setPosition({ lat: latitude, lng: longitude });
-        }
-      });
-    }
-
-    async function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 23.8, lng: 121 }, zoom: 7
-      });
-
+    async function loadData() {
       const res = await fetch(SHEET_URL);
       const text = await res.text();
       const json = JSON.parse(text.substr(47).slice(0, -2));
       const rows = json.table.rows;
 
-      swipeData = rows.map(row => ({
-        name: row.c[0]?.v || "",
-        link: row.c[1]?.v || "",
-        type: row.c[2]?.v || "",
-        tags: row.c[3]?.v || "",
-        desc: row.c[4]?.v || "",
-        latlng: row.c[5]?.v || "",
-        address: row.c[6]?.v || "",
-        photo: row.c[7]?.v || "https://i.imgur.com/Vs6fE3r.png"
+      allData = rows.map(row => ({
+        name: row.c[0]?.v || '',
+        link: row.c[1]?.v || '',
+        type: row.c[2]?.v || '',
+        tags: row.c[3]?.v || '',
+        desc: row.c[4]?.v || '',
+        latlng: row.c[5]?.v || '',
+        address: row.c[6]?.v || '',
+        photo: row.c[7]?.v || 'https://i.imgur.com/Vs6fE3r.png'
       }));
 
-      swipeData.forEach(data => {
-        if (!data.latlng.includes(",")) return;
-        const [lat, lng] = data.latlng.split(",").map(Number);
-        const marker = new google.maps.Marker({
-          position: { lat, lng },
-          map,
-          title: data.name
-        });
+      renderNextCard();
+    }
 
-        const info = new google.maps.InfoWindow({
-          content: `
-            <div>
-              <strong>${data.name}</strong><br/>
-              ${data.desc}<br/>
-              <a href="${data.link}" target="_blank">🔗 看店家</a><br/>
-              <small>${data.address}</small>
-            </div>`
-        });
-        marker.addListener("click", () => info.open(map, marker));
+    function renderNextCard() {
+      if (currentIndex >= allData.length) {
+        container.innerHTML = '<p style="color:#999">✨ 沒有更多推薦了</p>';
+        return;
+      }
+      const data = allData[currentIndex];
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <img src="${data.photo}" alt="圖">
+        <h3>${data.name}</h3>
+        <p>${data.desc}</p>
+      `;
+      card.addEventListener('touchstart', handleTouchStart, false);
+      card.addEventListener('touchmove', handleTouchMove, false);
+      container.innerHTML = '';
+      container.appendChild(card);
+    }
+
+    let xDown = null;
+    function handleTouchStart(evt) {
+      xDown = evt.touches[0].clientX;
+    }
+
+    function handleTouchMove(evt) {
+      if (!xDown) return;
+      let xUp = evt.touches[0].clientX;
+      let xDiff = xDown - xUp;
+      if (Math.abs(xDiff) > 50) {
+        if (xDiff > 0) {
+          // left swipe
+        } else {
+          saveToFav(allData[currentIndex]);
+        }
+        currentIndex++;
+        renderNextCard();
+        xDown = null;
+      }
+    }
+
+    function saveToFav(item) {
+      let favs = JSON.parse(localStorage.getItem('tintFavs') || '[]');
+      if (!favs.some(f => f.name === item.name)) {
+        favs.push(item);
+        localStorage.setItem('tintFavs', JSON.stringify(favs));
+      }
+    }
+
+    function toggleView() {
+      showingFavs = !showingFavs;
+      if (showingFavs) {
+        document.getElementById('toggle-btn').textContent = '👈 回滑卡';
+        container.style.display = 'none';
+        favList.style.display = 'flex';
+        renderFavList();
+      } else {
+        document.getElementById('toggle-btn').textContent = '📋 收藏清單';
+        favList.style.display = 'none';
+        container.style.display = 'flex';
+      }
+    }
+
+    function renderFavList() {
+      let favs = JSON.parse(localStorage.getItem('tintFavs') || '[]');
+      favList.innerHTML = '';
+      favs.forEach(item => {
+        let div = document.createElement('div');
+        div.className = 'fav-item';
+        div.innerHTML = `
+          <strong>${item.name}</strong>
+          <p>${item.desc}</p>
+          <small>${item.address}</small>
+          <br><a href="${item.link}" target="_blank">🔗 前往店家</a>
+        `;
+        favList.appendChild(div);
       });
     }
-    window.initMap = initMap;
-  </script>
 
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap">
+    loadData();
   </script>
 </body>
 </html>
