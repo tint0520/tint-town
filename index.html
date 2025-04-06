@@ -31,11 +31,16 @@
 
     .nav-btn { flex: 1; padding: 10px; text-align: center; color: #555; font-size:14px; }
 
-    .swiper-container { height: 55%; padding-top: 10px; }
+    .swiper-container {
+  height: 40%;  /* 原來 60% 的 80% */
+  padding-top: 60px;  /* 原來 20px 的 80% */
+}
 
-    .swiper-slide {
-      width: 80%; border-radius: 12px; box-shadow: 0 1.6px 6.4px rgba(0,0,0,0.15);
-      overflow-y: auto; background-color: #ffeff3;
+.swiper-slide {
+  width: 80%;  /* 原來 90% 的 80% */
+  border-radius: 20px;  /* 原來 15px 的 80% */
+  box-shadow: 0 1.6px 6.4px rgba(0,0,0,0.15);  /* 原來陰影的80% */
+  overflow-y: auto;background-color: #ffeff3;
       position: relative; padding-bottom: 30px;
     }
 
@@ -55,7 +60,6 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
-
   <script defer>
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
 
@@ -123,7 +127,7 @@
 
   <div id="map-view"></div>
   <div id="card-view" class="swiper-container"><div class="swiper-wrapper"></div></div>
-  <div id="favorite-view" class="p-4">我的收藏（尚未開發）</div>
+  <div id="favorite-view" class="p-4">這裡會顯示收藏的店家列表。</div>
 
   <div id="bottom-nav">
     <div class="nav-btn" onclick="showView('map-view')">🗺️<br>地圖找店</div>
