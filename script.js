@@ -2,8 +2,7 @@ let map;
 let swipeData = [];
 let userPosition = null;
 
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFvPIuAjnqij_Q7FF4wDWxQwDy382fcmFLe5wNjKms5Zs-ERzyOfeZ8m2KV8NjUr2ug31ClfG4-dBm/pub?output=csv";
-
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/12nFTJltWKVTVVBOe5RC9wQ4GWqgqcCO1bFkR-qMFmjs/gviz/tq?tqx=out:json";
 function startApp() {
   document.getElementById("popup").style.display = "none";
   document.getElementById("home-view").style.display = "flex";
