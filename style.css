@@ -56,13 +56,6 @@ html, body {
   color: #555;
   margin: 4px 0;
 }
-.card a {
-  display: inline-block;
-  margin: 6px;
-  font-size: 14px;
-  color: #d06e6e;
-  text-decoration: underline;
-}
 #popup {
   position: fixed;
   z-index: 9999;
@@ -87,6 +80,11 @@ html, body {
   padding: 10px 20px;
   border-radius: 24px;
   font-size: 16px;
+  transition: all 0.3s ease;
+}
+#popup button:hover {
+  background: #e05670;
+  transform: scale(1.05);
 }
 #app-header {
   position: fixed;
