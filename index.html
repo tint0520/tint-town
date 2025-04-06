@@ -3,105 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tint Maps 美業地圖 App</title>
+  <title>Tint Town 美業地圖 App</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; font-family: 'Noto Sans TC', sans-serif; background: #fff7f9; overflow: hidden; }
-
-    #app-header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 100px;
-      background: #fff0f4;
-      color: #d06e6e;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      z-index: 1000;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    #app-header h1 { font-size: 20px; }
-    #app-header p { font-size: 12px; color: #a88a9a; }
-
-    .view {
-      position: absolute;
-      top: 100px;
-      left: 0; right: 0;
-      bottom: 60px;
-      display: none;
-      overflow-y: auto;
-    }
-    #map-view { z-index: 1; }
-    #swipe-view {
-      background: #fff0f4;
-      z-index: 2;
-      display: none;
-      padding: 20px;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-    }
-
-    .tinder-card {
-      position: absolute;
-      width: 80vw;
-      max-width: 340px;
-      height: 70vh;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-      padding: 16px;
-      text-align: center;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-    }
-    .tinder-card img {
-      width: 100%; height: 220px; object-fit: cover;
-      border-radius: 12px;
-    }
-    .tinder-card h3 { color: #d06e6e; margin-top: 10px; }
-    .tinder-card p { font-size: 14px; color: #555; }
-
-    #bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 60px;
-      background: white;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      border-top: 1px solid #eee;
-      z-index: 1000;
-    }
-    #bottom-nav button {
-      background: none; border: none;
-      font-size: 14px;
-      color: #d06e6e;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    #popup {
-      position: fixed; z-index: 9999;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255,255,255,0.95);
-      display: flex; flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    #popup p { font-size: 18px; color: #444; margin-bottom: 20px; text-align: center; }
-    #popup button {
-      background: #d06e6e; color: white;
-      border: none; padding: 10px 20px;
-      border-radius: 24px; font-size: 16px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="popup">
@@ -114,140 +18,23 @@
     <p>找附近的美業店家</p>
   </div>
 
+  <div id="map-view" class="view"></div>
+  <div id="swipe-view" class="view"></div>
   <div id="home-view" class="view">
-    <h2>歡迎來到 Tint Maps</h2>
+    <h1>歡迎來到 Tint Town</h1>
     <p>立即探索附近最美的美甲工作室，從地圖、滑卡、到一鍵分享</p>
     <button onclick="startExploring()">開始探索</button>
   </div>
-  <div id="map-view" class="view"></div>
-  <div id="swipe-view" class="view"></div>
 
   <div id="bottom-nav">
     <button onclick="switchView('home')">🏠<br>首頁</button>
     <button onclick="switchView('map')">🗺<br>地圖</button>
     <button onclick="switchView('swipe')">💘<br>滑卡</button>
+    <button onclick="applyTypeFilter()">🧃<br>篩選</button>
+    <button onclick="goToMyLocation()">📍<br>我這</button>
   </div>
 
-  <script>
-    let map;
-    let swipeData = [];
-    let userPosition = null;
-
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFvPIuAjnqij_Q7FF4wDWxQwDy382fcmFLe5wNjKms5Zs-ERzyOfeZ8m2KV8NjUr2ug31ClfG4-dBm/pub?output=csv";
-
-    function startApp() {
-      document.getElementById("popup").style.display = "none";
-      startExploring();
-    }
-
-    function startExploring() {
-      switchView('map');
-      getUserLocation();
-      if (!map) initMap();
-    }
-
-    function switchView(view) {
-      document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-      document.getElementById(`${view}-view`).style.display = 'flex';
-    }
-
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map-view"), {
-        center: { lat: 25.034, lng: 121.564 },
-        zoom: 12,
-      });
-    }
-
-    function getUserLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          userPosition = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude
-          };
-
-          map && map.setCenter(userPosition);
-          map && new google.maps.Marker({
-            position: userPosition,
-            map,
-            title: "你在這裡",
-            icon: {
-              url: 'https://github.com/tint0520/tint-town/blob/main/person_pin_circle_30dp_B2A8D3_FILL1_wght400_GRAD0_opsz24.png?raw=true',
-              scaledSize: new google.maps.Size(44, 44)
-            }
-          });
-
-          loadSwipeData();
-        });
-      }
-    }
-
-    async function loadSwipeData() {
-      const res = await fetch(SHEET_URL);
-      const csv = await res.text();
-      const rows = csv.trim().split('\n').slice(1).map(r => r.split(','));
-
-      swipeData = rows.map(r => {
-        const [name, link, type, tags, desc, , , , latlng, address, photo] = r;
-        const [lat, lng] = latlng.split(',').map(Number);
-        const distance = userPosition ? getDistanceKm(userPosition.lat, userPosition.lng, lat, lng).toFixed(1) : "-";
-        return { name, desc, photo, link, distance };
-      });
-
-      renderTinderCards();
-    }
-
-    function renderTinderCards() {
-      const container = document.getElementById("swipe-view");
-      container.innerHTML = "";
-      [...swipeData].reverse().forEach(store => {
-        const card = document.createElement("div");
-        card.className = "tinder-card";
-        card.innerHTML = `
-          <img src="${store.photo}" alt="${store.name}" />
-          <h3>${store.name}</h3>
-          <p>${store.desc}</p>
-          <p>📍 距離你約 ${store.distance} km</p>
-          <a href="${store.link}" target="_blank">查看 IG</a>
-        `;
-        container.appendChild(card);
-
-        let offsetX = 0;
-        let isDragging = false;
-
-        card.addEventListener("mousedown", e => {
-          isDragging = true;
-          offsetX = e.clientX;
-        });
-        document.addEventListener("mousemove", e => {
-          if (!isDragging) return;
-          const dx = e.clientX - offsetX;
-          card.style.transform = `translateX(${dx}px) rotate(${dx / 10}deg)`;
-        });
-        document.addEventListener("mouseup", e => {
-          if (!isDragging) return;
-          isDragging = false;
-          const dx = e.clientX - offsetX;
-          if (Math.abs(dx) > 100) {
-            card.style.transition = "transform 0.5s ease";
-            card.style.transform = `translateX(${dx * 3}px) rotate(${dx / 5}deg)`;
-            setTimeout(() => card.remove(), 500);
-          } else {
-            card.style.transform = "translateX(0) rotate(0)";
-          }
-        });
-      });
-    }
-
-    function getDistanceKm(lat1, lng1, lat2, lng2) {
-      const toRad = deg => deg * Math.PI / 180;
-      const R = 6371;
-      const dLat = toRad(lat2 - lat1);
-      const dLng = toRad(lng2 - lng1);
-      const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
-  </script>
+  <script src="script.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
 </body>
 </html>
