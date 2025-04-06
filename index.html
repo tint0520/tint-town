@@ -16,13 +16,26 @@
     #map-view, #card-view, #favorite-view { display: none; height: calc(100% - 110px); }
 
     .top-banner {
-      width: 100%; height: 50px; background-color: #ffe4ec;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
+  width: 100%;
+  height: 80px; /* 調整高度給兩行文字更多空間 */
+  background-color: #ffe4ec; /* 原有淺粉色背景 */
+  display: flex;
+  flex-direction: column; /* 垂直排列 */
+  align-items: center; /* 水平置中 */
+  justify-content: center; /* 垂直置中 */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
 
-    .banner-text { font-size: 20px; color: #d63384; font-weight: bold; }
+.banner-text {
+  font-size: 24px; /* 主標題大小 */
+  color: #d63384;
+  font-weight: bold;
+}
 
+.banner-subtext {
+  font-size: 14px; /* 次標題大小 */
+  color: #888; /* 淺灰色文字 */
+}
     #bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
       background: white; display: flex; border-radius: 15px 15px 0 0;
@@ -110,8 +123,9 @@ let userLocation;
 </head>
 <body>
   <div class="top-banner">
-    <span class="banner-text">Tint Maps</span>
-  </div>
+  <div class="banner-text">Tint Maps</div>
+  <div class="banner-subtext">找附近的美業店家</div>
+</div>
 
   <div id="map-view"></div>
   <div id="card-view" class="swiper-container">
