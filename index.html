@@ -65,6 +65,8 @@
       overflow: hidden;
     }
 
+    .card-store img { height: 180px; object-fit: cover; width: 100%; }
+
     #location-alert {
       position: fixed;
       top: 60px;
@@ -125,16 +127,16 @@
     }
 
     function showStoreCard(store) {
-      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      const isFavorited = favorites.includes(store.name);
       const card = document.getElementById('store-card');
+      const isFavorited = JSON.parse(localStorage.getItem('favorites') || '[]').includes(store.name);
+
       card.innerHTML = `
-        <img src="${store.photo || ''}" class="img-fluid">
+        <img src="${store.photo || ''}" alt="${store.name}">
         <div class="p-3">
           <h5>${store.name}</h5>
-          <p>${store.desc || ''}</p>
-          <p>📍 ${store.address || ''}</p>
-          <p>⏰ ${store.hours || ''}</p>
+          <p>${store.desc || '尚無描述'}</p>
+          <p><strong>📍地址：</strong>${store.address || '未提供'}</p>
+          <p><strong>⏰營業時間：</strong>${store.hours || '未提供'}</p>
           <button class="favorite-btn btn btn-${isFavorited ? 'danger' : 'light'}" onclick="toggleFavorite('${store.name}')">❤️ ${isFavorited ? '已收藏' : '收藏'}</button>
         </div>`;
       card.style.display = 'block';
@@ -142,11 +144,8 @@
 
     function toggleFavorite(storeName) {
       let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      if (favorites.includes(storeName)) {
-        favorites = favorites.filter(name => name !== storeName);
-      } else {
-        favorites.push(storeName);
-      }
+      if (favorites.includes(storeName)) favorites = favorites.filter(name => name !== storeName);
+      else favorites.push(storeName);
       localStorage.setItem('favorites', JSON.stringify(favorites));
       loadStoreData();
     }
