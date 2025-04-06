@@ -1,3 +1,4 @@
+// script.js (完整版本，已整合 PapaParse，修復滑卡空白問題)
 let map;
 let swipeData = [];
 let userPosition = null;
@@ -63,21 +64,34 @@ function getDistanceKm(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-async function loadSwipeData() {
-  const res = await fetch(SHEET_URL);
-  const csv = await res.text();
-  const rows = csv.trim().split('\n').slice(1).map(r => r.split(','));
+function loadSwipeData() {
+  Papa.parse(SHEET_URL, {
+    download: true,
+    header: true,
+    complete: function(results) {
+      swipeData = results.data.map(store => {
+        if (!store.latlng || !store.latlng.includes(",")) return null;
+        const [lat, lng] = store.latlng.split(",").map(Number);
+        const distance = userPosition
+          ? getDistanceKm(userPosition.lat, userPosition.lng, lat, lng).toFixed(1)
+          : "-";
+        return {
+          name: store.name,
+          desc: store.desc,
+          link: store.link,
+          ig: store.ig,
+          line: store.line,
+          address: store.address,
+          hours: store.hours,
+          distance,
+          photo: store.photo || "https://i.imgur.com/Vs6fE3r.png"
+        };
+      }).filter(Boolean);
 
-  swipeData = rows.map(r => {
-    const [name, link, type, tags, desc, latlng, address, hours, ig, line, photo] = r;
-    if (!latlng || !latlng.includes(",")) return null;
-    const [lat, lng] = latlng.split(",").map(Number);
-    const distance = userPosition ? getDistanceKm(userPosition.lat, userPosition.lng, lat, lng).toFixed(1) : "-";
-    return { name, desc, link, ig, line, address, hours, lat, lng, distance, photo };
-  }).filter(Boolean);
-
-  swipeData.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
-  renderSwipeCards();
+      swipeData.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+      renderSwipeCards();
+    }
+  });
 }
 
 function renderSwipeCards() {
@@ -87,10 +101,9 @@ function renderSwipeCards() {
   swipeData.forEach(store => {
     const card = document.createElement("div");
     card.className = "card";
-    const photo = store.photo || "https://i.imgur.com/Vs6fE3r.png";
     card.innerHTML = `
       <button class="share-btn" onclick="shareStore('${store.name}', '${store.link || store.ig || ""}')">🔗</button>
-      <img src="${photo}" alt="${store.name}" />
+      <img src="${store.photo}" alt="${store.name}" />
       <h3>${store.name}</h3>
       <p>${store.desc}</p>
       <p>📍 ${store.address}</p>
