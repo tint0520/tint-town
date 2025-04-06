@@ -1,6 +1,7 @@
 let map;
 let markers = [];
 let currentLayer = "town";
+let swipeData = []; // 用來存 swipe 模式資料
 
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/12nFTJltWKVTVVBOe5RC9wQ4GWqgqcCO1bFkR-qMFmjs/gviz/tq?tqx=out:json";
 
@@ -15,6 +16,7 @@ async function initMap() {
   );
 
   switchLayer("town");
+  await loadSwipeData();
 }
 
 function getSelectedValues(className) {
@@ -72,6 +74,18 @@ function loadLayer(layer) {
         markers.push(marker);
       });
     });
+}
+
+async function loadSwipeData() {
+  const res = await fetch(SHEET_URL);
+  const text = await res.text();
+  const json = JSON.parse(text.substr(47).slice(0, -2));
+  const rows = json.table.rows;
+  swipeData = rows.map(row => ({
+    name: row.c[1]?.v || "",
+    desc: row.c[6]?.v || "",
+    photo: row.c[10]?.v || "https://i.imgur.com/Vs6fE3r.png"
+  }));
 }
 
 function showCard({ name, desc, address, link, photo }) {
