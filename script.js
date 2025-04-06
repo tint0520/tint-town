@@ -1,15 +1,24 @@
 let map;
 let markers = [];
+let currentLayer = "town";
 let swipeData = [];
 let userPosition = null;
-let currentIndex = 0;
 
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFvPIuAjnqij_Q7FF4wDWxQwDy382fcmFLe5wNjKms5Zs-ERzyOfeZ8m2KV8NjUr2ug31ClfG4-dBm/pub?output=csv";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/12nFTJltWKVTVVBOe5RC9wQ4GWqgqcCO1bFkR-qMFmjs/gviz/tq?tqx=out:json";
 
 function startApp() {
   document.getElementById("popup").style.display = "none";
-  switchView("map");  // 直接跳地圖
+  document.getElementById("home-view").style.display = "flex";
+  switchView("home");
   getUserLocation();
+}
+
+function startExploring() {
+  switchView('map');
+  setTimeout(() => {
+    getUserLocation();
+    if (!map) initMap();
+  }, 200);
 }
 
 function initMap() {
@@ -18,7 +27,7 @@ function initMap() {
     zoom: 12,
   });
 
-  document.getElementById("go-my-location").onclick = () => getUserLocation();
+  loadSwipeData();
 }
 
 function getUserLocation() {
@@ -30,8 +39,8 @@ function getUserLocation() {
       };
       userPosition = pos;
 
-      map.setCenter(pos);
-      map.setZoom(14);
+      map && map.setCenter(pos);
+      map && map.setZoom(14);
 
       new google.maps.Marker({
         position: pos,
@@ -48,98 +57,72 @@ function getUserLocation() {
   }
 }
 
-function switchView(view) {
-  document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-  document.getElementById(`${view}-view`).style.display = 'flex';
+function getDistanceKm(lat1, lng1, lat2, lng2) {
+  const toRad = deg => deg * Math.PI / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 async function loadSwipeData() {
   const res = await fetch(SHEET_URL);
   const text = await res.text();
-  const rows = text.trim().split("\n").slice(1).map(r => r.split(","));
+  const json = JSON.parse(text.substr(47).slice(0, -2));
+  const rows = json.table.rows;
 
-  swipeData = rows.map(r => {
-    const name = r[0], link = r[1], type = r[2], tags = r[3], desc = r[4], latlng = r[5], address = r[6], photo = r[7];
-    let [lat, lng] = latlng.split(",").map(Number);
-    let distance = "--";
-    if (userPosition && lat && lng) {
-      distance = getDistanceKm(userPosition.lat, userPosition.lng, lat, lng).toFixed(1);
-    }
-    return { name, desc, photo, address, link, lat, lng, distance };
-  });
+  swipeData = rows.map(row => {
+    const latlng = row.c[8]?.v || "";
+    if (!latlng || !latlng.includes(",")) return null;
+    const [lat, lng] = latlng.split(",").map(Number);
+    const dist = userPosition ? getDistanceKm(userPosition.lat, userPosition.lng, lat, lng) : 999;
+    return {
+      name: row.c[1]?.v || "",
+      desc: row.c[6]?.v || "",
+      photo: row.c[10]?.v || "https://i.imgur.com/Vs6fE3r.png",
+      distance: dist.toFixed(1)
+    };
+  }).filter(Boolean);
 
-  swipeData.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+  swipeData.sort((a, b) => a.distance - b.distance);
   renderSwipeCard();
-  renderMapMarkers();
-}
-
-function getDistanceKm(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLng/2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
 function renderSwipeCard() {
   const container = document.getElementById("swipe-view");
   container.innerHTML = "";
-
-  if (!swipeData.length) return container.innerHTML = "<p>找不到店家</p>";
-
-  const store = swipeData[currentIndex];
-  const card = document.createElement("div");
-  card.className = "card";
-  card.innerHTML = `
-    <img src="${store.photo}" alt="${store.name}" />
-    <h3>${store.name}</h3>
-    <p>${store.desc}</p>
-    <p>📍 距離你約 ${store.distance} km</p>
-    ${store.link ? `<a href="${store.link}" target="_blank">查看 Instagram</a>` : ""}
-    <div style="margin-top:12px;">
-      ${currentIndex > 0 ? `<button onclick="prevCard()">⬅️</button>` : ""}
-      ${currentIndex < swipeData.length - 1 ? `<button onclick="nextCard()">➡️</button>` : ""}
-    </div>
-  `;
-  container.appendChild(card);
-}
-
-function nextCard() {
-  if (currentIndex < swipeData.length - 1) {
-    currentIndex++;
-    renderSwipeCard();
-  }
-}
-
-function prevCard() {
-  if (currentIndex > 0) {
-    currentIndex--;
-    renderSwipeCard();
-  }
-}
-
-function renderMapMarkers() {
-  markers.forEach(m => m.setMap(null));
-  markers = [];
-
   swipeData.forEach(store => {
-    if (store.lat && store.lng) {
-      const marker = new google.maps.Marker({
-        position: { lat: store.lat, lng: store.lng },
-        map,
-        title: store.name,
-        icon: {
-          url: "https://github.com/tint0520/tint-town/blob/main/local_mall_30dp_EECECD_FILL1_wght400_GRAD0_opsz24.png?raw=true",
-          scaledSize: new google.maps.Size(32, 32)
-        }
-      });
-
-      const infowindow = new google.maps.InfoWindow({
-        content: `<strong>${store.name}</strong><br>${store.desc}<br>${store.address}`
-      });
-
-      marker.addListener("click", () => infowindow.open(map, marker));
-      markers.push(marker);
-    }
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <img src="${store.photo}" alt="${store.name}" />
+      <h3>${store.name}</h3>
+      <p>${store.desc}</p>
+      <p>📍 距離你約 ${store.distance} km</p>
+    `;
+    container.appendChild(card);
   });
+}
+
+function switchView(view) {
+  document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+  const el = document.getElementById(`${view}-view`);
+  if (el) el.style.display = 'flex';
+}
+
+function applyTypeFilter() {
+  alert("（篩選功能待新增 UI）先這樣假裝你按了！");
+}
+
+function goToMyLocation() {
+  getUserLocation();
+}
+
+function switchLayer(layer) {
+  // 保留用不到的空殼，避免錯誤
 }
