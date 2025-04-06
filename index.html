@@ -50,7 +50,7 @@
 
     .store-distance { position: absolute; bottom: 10px; right: 10px; font-size: 12px; color: #888; }
 
-   .favorite-btn {
+  .favorite-btn {
   position: absolute;
   top: 10px;                /* 距離圖片上方位置 */
   right: 10px;              /* 距離圖片右方位置 */
@@ -119,17 +119,13 @@
       return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
     }
 
-    function initSwiper() {
+     function initSwiper() {
       document.querySelector('.swiper-wrapper').innerHTML = stores.map(store => `
         <div class="swiper-slide">
-          <img src="${store.photo}" alt="${store.name}">
-
-<div class="swiper-slide">
-  <div style="position: relative;">
-    <img src="${store.photo}" alt="${store.name}">
-    <div class="favorite-btn">❤️</div>
-  </div>
-          
+          <div style="position: relative;">
+            <img src="${store.photo}" alt="${store.name}">
+            <div class="favorite-btn">❤️</div>
+          </div>
           <div class="store-info">
             <h5>${store.name}</h5>
             <p>${store.desc}</p>
