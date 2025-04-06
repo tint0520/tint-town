@@ -68,12 +68,25 @@ let markers = [];
 let stores = [];
 let userLocation;
     
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map-view"), { center: { lat: 25.034, lng: 121.564 }, zoom: 14 });
-      navigator.geolocation.getCurrentPosition(pos => map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }));
-      loadStoreData();
-      showView('map-view');
-    }
+ function initMap() {
+  map = new google.maps.Map(document.getElementById("map-view"), {
+    center: { lat: 25.034, lng: 121.564 },
+    zoom: 14
+  });
+
+  navigator.geolocation.getCurrentPosition(pos => {
+    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    map.setCenter(userLocation);
+    
+    // 取得使用者位置後，再呼叫載入店家資料
+    loadStoreData();
+  }, () => {
+    alert('無法取得你的定位，距離功能將無法使用。');
+    loadStoreData();  // 若無法定位，仍要載入店家資料
+  });
+
+  showView('map-view');
+}
 
     function loadStoreData() {
   Papa.parse(SHEET_URL, { download: true, header: true, complete: results => {
