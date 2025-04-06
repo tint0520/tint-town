@@ -76,50 +76,89 @@ let userLocation;
     }
 
     function loadStoreData() {
-      Papa.parse(SHEET_URL, { download: true, header: true, complete: results => {
-        stores = results.data;
-        markers.forEach(m => m.setMap(null)); markers = [];
+  Papa.parse(SHEET_URL, { download: true, header: true, complete: results => {
+    stores = results.data;
+    markers.forEach(m => m.setMap(null)); 
+    markers = [];
 
-        stores.forEach(store => {
-          if (!store.latlng) return;
-          const [lat, lng] = store.latlng.split(",").map(Number);
-          const marker = new google.maps.Marker({ position: { lat, lng }, map });
-          markers.push(marker);
-        });
+    stores.forEach((store, index) => {
+      if (!store.latlng) return;
+      const [lat, lng] = store.latlng.split(",").map(Number);
+      store.distance = userLocation ? calcDistance(userLocation.lat, userLocation.lng, lat, lng) : '--';
 
-        new markerClusterer.MarkerClusterer({ markers, map });
-        initSwiper();
-      }});
-    }
-
-    function initSwiper() {
-      const swiperWrapper = document.querySelector('.swiper-wrapper');
-      swiperWrapper.innerHTML = stores.map(store => `
-        <div class="swiper-slide">
-          <img src="${store.photo}" alt="${store.name}">
-          <div class="store-info">
-            <h5>${store.name}</h5>
-            <p>${store.desc}</p>
-            <p>類型：${store.type} | 標籤：${store.tags}</p>
-            <p>地址：${store.address}</p>
-            <p>營業時間：${store.hours}</p>
-            <p>
-              <a href="${store.link}" target="_blank">🔗 網站</a> |
-              <a href="${store.ig}" target="_blank">📸 IG</a> |
-              <a href="${store.line}" target="_blank">💬 LINE</a>
-            </p>
-          </div>
-        </div>`).join('');
-
-      new Swiper('.swiper-container', { slidesPerView: 'auto', spaceBetween: 15, centeredSlides: true });
-    }
-
-    function showView(viewId) {
-      ['map-view','card-view','favorite-view'].forEach(id=>{
-        document.getElementById(id).style.display=(id===viewId)?'block':'none';
+      // 建立店家圖標(marker)並放到地圖上
+      const marker = new google.maps.Marker({ 
+        position: { lat, lng }, 
+        map,
+        title: store.name 
       });
-    }
-  </script>
+
+      // 點擊地圖圖標(marker)後跳出該店家卡片
+      marker.addListener('click', () => {
+        showCardForStore(index); // 點擊後顯示對應的店家卡片
+      });
+
+      markers.push(marker);
+    });
+
+    // 叢集功能
+    new markerClusterer.MarkerClusterer({ markers, map });
+
+    stores.sort((a, b) => a.distance - b.distance);
+    initSwiper();
+  }});
+}
+ function calcDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+    return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
+  }
+
+  let swiper; // ← 新增的變數 (Swiper的實體)
+
+  function initSwiper() {
+    document.querySelector('.swiper-wrapper').innerHTML = stores.map(store => `
+      <div class="swiper-slide">
+        <div style="position: relative;">
+          <img src="${store.photo}" alt="${store.name}">
+          <div class="favorite-btn">❤️</div>
+        </div>
+        <div class="store-info">
+          <h5>${store.name}</h5>
+          <p>${store.desc}</p>
+          <p>類型：${store.type}</p>
+          <p>標籤：${store.tags}</p>
+          <p>地址：${store.address}</p>
+          <p>營業時間：${store.hours}</p>
+          <p>
+            <a href="${store.link}">🔗網站</a> | 
+            <a href="${store.ig}">📸IG</a> | 
+            <a href="${store.line}">💬LINE</a>
+          </p>
+        </div>
+        <div class="store-distance">距離：${store.distance} km</div>
+      </div>`).join('');
+
+    swiper = new Swiper('.swiper-container', { 
+      slidesPerView: 'auto', 
+      spaceBetween: 15, 
+      centeredSlides: true 
+    });
+  }
+
+  function showView(viewId) {
+    ['map-view','card-view','favorite-view'].forEach(id=>{
+      document.getElementById(id).style.display=(id===viewId)?'block':'none';
+    });
+  }
+
+  function showCardForStore(index) {
+    showView('card-view');
+    swiper.slideTo(index, 500, true);
+  }
+
+</script>
 </head>
 <body>
   <div class="top-banner">
