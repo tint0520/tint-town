@@ -51,13 +51,6 @@
       display: flex;
       flex-direction: column;
     }
-    .card img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      border-radius: 12px;
-      margin-bottom: 8px;
-    }
     .card h3 {
       font-size: 18px;
       color: #d06e6e;
@@ -73,17 +66,6 @@
       color: #d06e6e;
       margin-top: 6px;
       text-decoration: underline;
-    }
-    .share-btn {
-      align-self: flex-end;
-      background: #f8d3dc;
-      border: none;
-      border-radius: 50%;
-      padding: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      color: #d06e6e;
-      margin-bottom: 8px;
     }
   </style>
 </head>
@@ -152,23 +134,24 @@
 
       swipeData = table.map(row => {
         const get = i => row.c[i]?.v || "";
-        const latlng = get(8);
+        const latlng = get(5);
         if (!latlng.includes(",")) return null;
         const [lat, lng] = latlng.split(",").map(Number);
         const distance = userPosition ? getDistanceKm(userPosition.lat, userPosition.lng, lat, lng).toFixed(1) : "-";
 
         return {
           name: get(0),
-          ig: get(1),
+          link: get(1),
           type: get(2),
           tags: get(3),
           desc: get(4),
-          line: get(5),
-          phone: get(6),
-          web: get(7),
-          lat, lng,
-          addr: get(9),
-          photo: get(10),
+          latlng,
+          lat,
+          lng,
+          address: get(6),
+          hours: get(7),
+          ig: get(8),
+          line: get(9),
           distance
         };
       }).filter(Boolean);
@@ -185,18 +168,17 @@
         const card = document.createElement("div");
         card.className = "card";
 
-        const photo = store.photo || "https://via.placeholder.com/300x200?text=No+Image";
-        const shareLink = store.web || store.ig || store.line || window.location.href;
-
         card.innerHTML = `
-          <button class="share-btn" onclick="shareStore('${store.name}', '${shareLink}')">🔗</button>
-          <img src="${photo}" alt="圖片" />
           <h3>${store.name}</h3>
           <p>${store.desc}</p>
-          <p>📍 距離你約 ${store.distance} km</p>
-          ${store.ig ? `<a href="${store.ig}" target="_blank">IG</a>` : "<span>未提供 IG</span>"}
-          ${store.line ? `<a href="${store.line}" target="_blank">LINE</a>` : "<span>未提供 LINE</span>"}
-          ${store.phone ? `<a href="tel:${store.phone}">📞 ${store.phone}</a>` : ""}
+          <p>類型：${store.type}</p>
+          <p>標籤：${store.tags}</p>
+          <p>📍 ${store.address}</p>
+          <p>🕒 ${store.hours}</p>
+          <p>📶 距離你：${store.distance} km</p>
+          ${store.link ? `<a href="${store.link}" target="_blank">網站</a>` : ''}
+          ${store.ig ? `<a href="${store.ig}" target="_blank">IG</a>` : ''}
+          ${store.line ? `<a href="${store.line}" target="_blank">LINE</a>` : ''}
         `;
 
         container.appendChild(card);
@@ -207,17 +189,6 @@
           title: store.name
         });
       });
-    }
-
-    function shareStore(name, link) {
-      const shareLink = link || window.location.href;
-      if (navigator.share) {
-        navigator.share({ title: name, url: shareLink });
-      } else {
-        navigator.clipboard.writeText(shareLink).then(() => {
-          alert("連結已複製");
-        });
-      }
     }
   </script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
