@@ -8,168 +8,134 @@
   <!-- 載入字型（Google Fonts）與 Bootstrap CSS -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Swiper.js CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css"/>
 
   <style>
     html, body, #map-view { height: 100%; margin: 0; padding: 0; }
     body { font-family: 'Noto Sans TC', sans-serif; }
 
-    #bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: white;
-      border-radius: 15px 15px 0 0;
-      box-shadow: 0 -3px 10px rgba(0,0,0,0.15);
-    }
-    .nav-btn { flex: 1; padding: 12px; text-align: center; color: #555; font-size:14px; }
-
-    .view { display: none; }
-    .active-view { display: flex; flex-direction: column; }
-
     #search-input {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      right: 10px;
-      z-index: 5;
-      border-radius: 20px;
-      padding: 10px 15px;
+      position: fixed; top: 10px; left: 10px; right: 10px; z-index: 5;
+      border-radius: 20px; padding: 10px 15px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    .favorite-btn { cursor: pointer; }
-
     #my-location-btn {
-      position: fixed;
-      bottom: 80px;
-      right: 15px;
-      z-index: 5;
-      border-radius: 50%;
-      width: 45px;
-      height: 45px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: fixed; bottom: 200px; right: 15px; z-index: 5;
+      border-radius: 50%; width: 45px; height: 45px;
+      display: flex; align-items: center; justify-content: center;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
-    .card-store {
-      position: fixed;
-      bottom: 140px;
-      left: 10px;
-      right: 10px;
-      z-index: 4;
-      border-radius: 15px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      overflow: hidden;
+    #bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; background: white;
+      border-radius: 15px 15px 0 0; box-shadow: 0 -3px 10px rgba(0,0,0,0.15);
+      display: flex;
     }
 
-    .card-store img { height: 180px; object-fit: cover; width: 100%; }
+    .nav-btn { flex: 1; padding: 12px; text-align: center; color: #555; font-size:14px; }
 
-    #location-alert {
-      position: fixed;
-      top: 60px;
-      left: 10px;
-      right: 10px;
-      z-index: 5;
-      padding: 10px;
-      border-radius: 10px;
-      background-color: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      text-align: center;
+    .swiper-container {
+      position: fixed; bottom: 60px; left: 0; right: 0; height: 180px;
+      padding: 10px 0; z-index: 4;
     }
+
+    .swiper-slide {
+      width: 280px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      overflow: hidden; background-color: #fff;
+    }
+
+    .swiper-slide img { height: 100px; object-fit: cover; width: 100%; }
+
+    .store-info { padding: 10px; }
+
+    .distance-info { color: #999; font-size: 12px; }
   </style>
 
+  <!-- Swiper.js &其他JS函式庫 -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM鑰&callback=initMap"></script>
 
   <script defer>
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0"; // 更換你自己的 Google Sheet連結
 
-    let map;
-    let markers = [];
+    let map, markers = [], stores = [], userLocation;
 
     function initMap() {
-      map = new google.maps.Map(document.getElementById("map-view"), { center: { lat: 25.034, lng: 121.564 }, zoom: 12, });
+      map = new google.maps.Map(document.getElementById("map-view"), { center: { lat: 25.034, lng: 121.564 }, zoom: 14 });
+      navigator.geolocation.getCurrentPosition(pos => {
+        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        map.setCenter(userLocation);
+      });
       loadStoreData();
-      requestLocation();
-    }
-
-    function requestLocation() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          map.setZoom(15);
-        });
-      }
     }
 
     function loadStoreData() {
-      Papa.parse(SHEET_URL, { download: true, header: true, complete: function(results) {
+      Papa.parse(SHEET_URL, { download: true, header: true, complete: results => {
+        stores = results.data;
+        markers.forEach(marker => marker.setMap(null));
         markers = [];
-        results.data.forEach(store => createMarker(store));
+
+        stores.forEach((store, index) => {
+          if (!store.latlng) return;
+          const [lat, lng] = store.latlng.split(",").map(Number);
+          const marker = new google.maps.Marker({ position: { lat, lng }, title: store.name, map });
+          markers.push(marker);
+        });
+
+        initSwiper();
         new markerClusterer.MarkerClusterer({ markers, map });
       }});
     }
 
-    function createMarker(store) {
-      if (!store.latlng || !store.latlng.includes(",")) return;
-      const [lat, lng] = store.latlng.split(",").map(Number);
-      const marker = new google.maps.Marker({ position: { lat, lng }, title: store.name, map });
-
-      marker.addListener('click', () => {
-        showStoreCard(store);
-        map.panTo({ lat, lng });
-      });
-      markers.push(marker);
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+      return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
     }
 
-    function showStoreCard(store) {
-      const card = document.getElementById('store-card');
-      const isFavorited = JSON.parse(localStorage.getItem('favorites') || '[]').includes(store.name);
+    function initSwiper() {
+      const sortedStores = stores.map(store => {
+        const [lat, lng] = store.latlng.split(",").map(Number);
+        store.distance = userLocation ? calculateDistance(userLocation.lat, userLocation.lng, lat, lng) : "--";
+        return store;
+      }).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
 
-      card.innerHTML = `
-        <img src="${store.photo || ''}" alt="${store.name}">
-        <div class="p-3">
-          <h5>${store.name}</h5>
-          <p>${store.desc || '尚無描述'}</p>
-          <p><strong>📍地址：</strong>${store.address || '未提供'}</p>
-          <p><strong>⏰營業時間：</strong>${store.hours || '未提供'}</p>
-          <button class="favorite-btn btn btn-${isFavorited ? 'danger' : 'light'}" onclick="toggleFavorite('${store.name}')">❤️ ${isFavorited ? '已收藏' : '收藏'}</button>
-        </div>`;
-      card.style.display = 'block';
-    }
+      const swiperWrapper = document.querySelector('.swiper-wrapper');
+      swiperWrapper.innerHTML = sortedStores.map(store => `
+        <div class="swiper-slide">
+          <img src="${store.photo || ''}" alt="${store.name}">
+          <div class="store-info">
+            <h6>${store.name}</h6>
+            <p class="distance-info">距離約 ${store.distance} 公里</p>
+            <p>${store.desc || ''}</p>
+          </div>
+        </div>`).join('');
 
-    function toggleFavorite(storeName) {
-      let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      if (favorites.includes(storeName)) favorites = favorites.filter(name => name !== storeName);
-      else favorites.push(storeName);
-      localStorage.setItem('favorites', JSON.stringify(favorites));
-      loadStoreData();
-    }
-
-    function goToMyLocation() {
-      navigator.geolocation.getCurrentPosition(pos => {
-        map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        map.setZoom(15);
+      new Swiper('.swiper-container', {
+        slidesPerView: 'auto', spaceBetween: 15, centeredSlides: true
       });
     }
   </script>
 </head>
 <body>
   <input id="search-input" class="form-control" placeholder="搜尋店家名稱">
-  <button id="my-location-btn" class="btn btn-primary" onclick="goToMyLocation()">📍</button>
+  <button id="my-location-btn" class="btn btn-primary">📍</button>
 
-  <div id="map-view" class="view active-view"></div>
-  <div id="store-card" class="card-store bg-white" style="display:none;"></div>
+  <div id="map-view"></div>
 
-  <div id="bottom-nav" class="d-flex">
-    <div class="nav-btn">🗺<br>探索地圖</div>
-    <div class="nav-btn">❤️<br>我的收藏</div>
+  <div class="swiper-container">
+    <div class="swiper-wrapper"></div>
   </div>
 
-  <div id="location-alert">📍 請允許定位，以獲得最佳的使用體驗！</div>
+  <div id="bottom-nav">
+    <div class="nav-btn">❤️<br>我的收藏</div>
+    <div class="nav-btn">🔍<br>篩選</div>
+  </div>
 </body>
 </html>
