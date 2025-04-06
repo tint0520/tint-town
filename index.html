@@ -23,12 +23,18 @@
 
     .nav-btn { flex: 1; padding: 10px; text-align: center; color: #555; font-size:14px; }
 
-    .swiper-container { height: 60%; padding-top: 20px; }
+    .swiper-container {
+  height: 48%;  /* 原來 60% 的 80% */
+  padding-top: 16px;  /* 原來 20px 的 80% */
+}
 
-    .swiper-slide {
-      width: 90%; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      overflow-y: auto; background-color: #fff;
-    }
+.swiper-slide {
+  width: 72%;  /* 原來 90% 的 80% */
+  border-radius: 12px;  /* 原來 15px 的 80% */
+  box-shadow: 0 1.6px 6.4px rgba(0,0,0,0.15);  /* 原來陰影的80% */
+  overflow-y: auto;
+  background-color: #fff;
+}
 
     .swiper-slide img { height: 180px; object-fit: cover; width: 100%; }
 
