@@ -3,7 +3,7 @@ let markers = [];
 let swipeData = [];
 let userPosition = null;
 
-// 新的 Google Sheets 連結
+// 最新的 Google Sheets 連結
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/gviz/tq?tqx=out:json";
 
 function startApp() {
@@ -68,23 +68,23 @@ async function loadSwipeData() {
   const rows = json.table.rows;
 
   swipeData = rows.map(row => {
-    const latlng = row.c[5]?.v || "";  // latlng 在第六欄 (index:5)
+    const latlng = row.c[5]?.v || "";
     if (!latlng.includes(",")) return null;
     const [lat, lng] = latlng.split(",").map(Number);
     const dist = userPosition ? getDistanceKm(userPosition.lat, userPosition.lng, lat, lng) : 999;
     return {
-      name: row.c[0]?.v || "",      // name (第一欄)
-      link: row.c[1]?.v || "",      // link (第二欄)
-      type: row.c[2]?.v || "",      // type (第三欄)
-      tags: row.c[3]?.v || "",      // tags (第四欄)
-      desc: row.c[4]?.v || "",      // desc (第五欄)
-      address: row.c[6]?.v || "",   // address (第七欄)
-      hours: row.c[7]?.v || "",     // hours (第八欄)
-      ig: row.c[8]?.v || "",        // ig (第九欄)
-      line: row.c[9]?.v || "",      // line (第十欄)
+      name: row.c[0]?.v || "",
+      link: row.c[1]?.v || "",
+      type: row.c[2]?.v || "",
+      tags: row.c[3]?.v || "",
+      desc: row.c[4]?.v || "",
+      address: row.c[6]?.v || "",
+      hours: row.c[7]?.v || "",
+      ig: row.c[8]?.v || "",
+      line: row.c[9]?.v || "",
       distance: dist.toFixed(1),
       lat, lng,
-      photo: "https://i.imgur.com/Vs6fE3r.png" // 可自訂圖片來源或 Sheets 新增圖片欄位
+      photo: "https://i.imgur.com/Vs6fE3r.png"
     };
   }).filter(Boolean).sort((a,b)=>a.distance-b.distance);
 
@@ -115,7 +115,11 @@ function renderSwipeCard() {
     new google.maps.Marker({
       position: { lat: store.lat, lng: store.lng },
       map,
-      title: store.name
+      title: store.name,
+      icon: {
+        url: 'https://github.com/tint0520/tint-town/blob/main/local_mall_30dp_EECECD_FILL1_wght400_GRAD0_opsz24.png?raw=true',
+        scaledSize: new google.maps.Size(38, 38)
+      }
     });
   });
 }
