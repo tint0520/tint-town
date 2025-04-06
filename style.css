@@ -15,31 +15,29 @@ html, body {
   left: 0; right: 0;
   bottom: 60px;
   display: none;
+  overflow-y: auto;
 }
 #map-view { z-index: 1; }
 #swipe-view {
   background: #fff0f4;
   z-index: 2;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
+  display: flex;
+  flex-direction: row;
+  scroll-snap-type: x mandatory;
+  overflow-x: auto;
   padding: 20px;
+  gap: 16px;
 }
 .card {
-  width: 90%;
-  max-width: 360px;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  width: 300px;
   background: linear-gradient(to bottom right, #fff8f9, #fff);
   border-radius: 16px;
   box-shadow: 0 6px 24px rgba(0,0,0,0.1);
   padding: 16px;
+  position: relative;
   text-align: center;
-  margin-bottom: 16px;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-.card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 .card img {
   width: 100%;
@@ -48,30 +46,48 @@ html, body {
   object-fit: cover;
 }
 .card h3 {
-  margin: 10px 0 4px;
   color: #d06e6e;
+  margin-top: 10px;
 }
 .card p {
   font-size: 14px;
   color: #555;
-  margin: 4px 0;
+}
+.card a {
+  display: inline-block;
+  margin: 4px;
+  font-size: 14px;
+  color: #d06e6e;
+  text-decoration: underline;
+}
+.share-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #f8d3dc;
+  border: none;
+  border-radius: 50%;
+  padding: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #d06e6e;
 }
 #popup {
   position: fixed;
   z-index: 9999;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255,255,255,0.95);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  text-align: center;
   padding: 20px;
 }
 #popup p {
   font-size: 18px;
   color: #444;
   margin-bottom: 20px;
+  text-align: center;
 }
 #popup button {
   background: #d06e6e;
@@ -80,11 +96,6 @@ html, body {
   padding: 10px 20px;
   border-radius: 24px;
   font-size: 16px;
-  transition: all 0.3s ease;
-}
-#popup button:hover {
-  background: #e05670;
-  transform: scale(1.05);
 }
 #app-header {
   position: fixed;
@@ -108,6 +119,29 @@ html, body {
 #app-header p {
   font-size: 12px;
   color: #a88a9a;
+}
+#bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: white;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid #eee;
+  z-index: 9999;
+}
+#bottom-nav button {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #d06e6e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 #home-view {
   z-index: 10;
@@ -137,27 +171,4 @@ html, body {
   padding: 10px 16px;
   border-radius: 20px;
   font-size: 16px;
-}
-#bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: white;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  border-top: 1px solid #eee;
-  z-index: 9999;
-}
-#bottom-nav button {
-  background: none;
-  border: none;
-  font-size: 14px;
-  color: #d06e6e;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
 }
