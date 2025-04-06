@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tint Town 美業地圖 + 滑卡距離篩選模式</title>
+  <title>Tint Town 美業地圖 + App 幻術模式</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -11,10 +11,10 @@
       height: 100%;
       font-family: 'Noto Sans TC', sans-serif;
       background: #fff7f9;
-      overflow: hidden;
+      position: relative;
     }
     .view {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      position: absolute; top: 100px; left: 0; right: 0; bottom: 60px;
       display: none;
     }
     #map-view { z-index: 1; }
@@ -62,32 +62,51 @@
       color: #d06e6e;
       text-decoration: underline;
     }
-    #controls {
+    #app-header {
       position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 999;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100px;
+      background: #fff0f4;
+      color: #d06e6e;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      z-index: 1000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    .control-row {
+    #app-header h1 {
+      font-size: 20px;
+    }
+    #app-header p {
+      font-size: 12px;
+      color: #a88a9a;
+    }
+    #bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: white;
       display: flex;
-      gap: 8px;
-      margin-bottom: 6px;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid #eee;
+      z-index: 9999;
     }
-    #controls button, #filter-bar select {
-      background: #ffe6eb;
-      color: #d06e6e;
+    #bottom-nav button {
+      background: none;
       border: none;
-      padding: 10px 16px;
-      border-radius: 20px;
       font-size: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      cursor: pointer;
-    }
-    #filter-bar select {
-      padding: 8px 12px;
+      color: #d06e6e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
     #popup {
       position: fixed;
@@ -122,22 +141,9 @@
     <button onclick="startApp()">好啊，開逛！</button>
   </div>
 
-  <div id="controls">
-    <div class="control-row">
-      <button onclick="switchView('home')">🏠 首頁</button>
-      <button onclick="switchView('map')">🗺 地圖模式</button>
-      <button onclick="switchView('swipe')">💘 滑卡模式</button>
-    </div>
-    <div class="control-row">
-      <select id="typeFilter" onchange="applyTypeFilter()">
-        <option value="">全部類型</option>
-        <option value="美甲">美甲</option>
-        <option value="美睫">美睫</option>
-        <option value="紋繡">紋繡</option>
-        <option value="皮膚管理">皮膚管理</option>
-      </select>
-      <button onclick="goToMyLocation()">📍 我現在位置</button>
-    </div>
+  <div id="app-header">
+    <h1>Tint Maps</h1>
+    <p>找附近的美業店家</p>
   </div>
 
   <div id="map-view" class="view"></div>
@@ -146,6 +152,14 @@
     <h1 style="font-size: 28px; color: #d06e6e; margin-bottom: 12px;">歡迎來到 Tint Town</h1>
     <p style="color: #555; font-size: 16px; max-width: 300px; text-align: center;">立即探索附近最美的美甲工作室，從地圖、滑卡、到一鍵分享</p>
     <button onclick="switchView('map')" style="margin-top: 20px; background: #d06e6e; color: white; border: none; padding: 10px 16px; border-radius: 20px; font-size: 16px;">開始探索</button>
+  </div>
+
+  <div id="bottom-nav">
+    <button onclick="switchView('home')">🏠<br>首頁</button>
+    <button onclick="switchView('map')">🗺<br>地圖</button>
+    <button onclick="switchView('swipe')">💘<br>滑卡</button>
+    <button onclick="applyTypeFilter()">🧃<br>篩選</button>
+    <button onclick="goToMyLocation()">📍<br>我這</button>
   </div>
 
   <script src="script.js"></script>
