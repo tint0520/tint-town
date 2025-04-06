@@ -123,6 +123,13 @@
       document.querySelector('.swiper-wrapper').innerHTML = stores.map(store => `
         <div class="swiper-slide">
           <img src="${store.photo}" alt="${store.name}">
+
+<div class="swiper-slide">
+  <div style="position: relative;">
+    <img src="${store.photo}" alt="${store.name}">
+    <div class="favorite-btn">❤️</div>
+  </div>
+          
           <div class="store-info">
             <h5>${store.name}</h5>
             <p>${store.desc}</p>
