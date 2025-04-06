@@ -50,10 +50,15 @@
 
     .store-distance { position: absolute; bottom: 10px; right: 10px; font-size: 12px; color: #888; }
 
-    .favorite-btn {
-      position: absolute; top: 10px; right: 10px; cursor: pointer;
-      font-size: 20px; color: #d63384;
-    }
+   .favorite-btn {
+  position: absolute;
+  top: 10px;                /* 距離圖片上方位置 */
+  right: 10px;              /* 距離圖片右方位置 */
+  cursor: pointer;
+  font-size: 24px;          /* 愛心大小，可調整 */
+  color: #d63384;
+  z-index: 10;              /* 確保按鈕浮現在圖片之上 */
+}
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
