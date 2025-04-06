@@ -76,18 +76,36 @@
     }
 
     function loadStoreData() {
-      Papa.parse(SHEET_URL, { download: true, header: true, complete: results => {
-        stores = results.data;
-        stores.forEach(store => {
-          if (store.latlng) {
-            const [lat, lng] = store.latlng.split(",").map(Number);
-            store.distance = userLocation ? calcDistance(userLocation.lat, userLocation.lng, lat, lng) : '--';
-          }
+  Papa.parse(SHEET_URL, { download: true, header: true, complete: results => {
+    stores = results.data;
+    markers.forEach(marker => marker.setMap(null)); // 清除舊marker
+    markers = [];
+
+    stores.forEach(store => {
+      if (store.latlng) {
+        const [lat, lng] = store.latlng.split(",").map(Number);
+        store.distance = userLocation ? calcDistance(userLocation.lat, userLocation.lng, lat, lng) : '--';
+
+        // 建立新的地圖標記(marker)
+        const marker = new google.maps.Marker({
+          position: { lat, lng },
+          map,
+          title: store.name
         });
-        stores.sort((a, b) => a.distance - b.distance);
-        initSwiper();
-      }});
-    }
+
+        markers.push(marker);  // 儲存marker
+
+        // 點擊標記跳出店家卡片
+        marker.addListener('click', () => {
+          alert(`店家名稱：${store.name}\n地址：${store.address}\n距離：${store.distance} km`);
+        });
+      }
+    });
+
+    stores.sort((a, b) => a.distance - b.distance); // 距離排序
+    initSwiper(); // 更新卡片顯示
+  }});
+}
 
     function calcDistance(lat1, lon1, lat2, lon2) {
       const R = 6371; const dLat = (lat2 - lat1) * Math.PI / 180;
