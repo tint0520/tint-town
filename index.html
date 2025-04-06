@@ -122,14 +122,7 @@ let userLocation;
   }});
 }
 
-    .store-distance {
-  position: relative;  /* 改成相對位置，讓距離貼著上方資訊 */
-  margin-top: 8px;     /* 距離上面店家資訊的間距 */
-  font-size: 12px;
-  color: #888;
-  text-align: left;    /* 距離文字靠左對齊 */
-  padding-left: 10px;  /* 跟上面資訊左側對齊 */
-}
+
  function calcDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
