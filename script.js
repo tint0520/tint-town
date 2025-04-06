@@ -3,7 +3,7 @@ let map;
 let swipeData = [];
 let userPosition = null;
 
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFvPIuAjnqij_Q7FF4wDWxQwDy382fcmFLe5wNjKms5Zs-ERzyOfeZ8m2KV8NjUr2ug31ClfG4-dBm/pub?output=csv";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR0F6ahHkyj0UoFa5u0vdYf_8dagTWeYf2dsz0wuV_LPpMRHJJl6P9ML1_rvVmlYUA4Mhh6_wGnRAhj/pub?gid=0&single=true&output=csv";
 
 function startApp() {
   document.getElementById("popup").style.display = "none";
