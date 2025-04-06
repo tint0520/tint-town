@@ -1,47 +1,43 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tint 地圖・滑滑選店</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#d06e6e">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tint Maps 美業地圖 App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
+  <div id="popup">
+    <p>📍 為了推薦你附近的店家<br>請允許我們取得你的定位</p>
+    <button onclick="startApp()">好啊，開逛！</button>
+  </div>
 
   <div id="app-header">
-    <h1>Tint 地圖・滑滑選店</h1>
-    <p>探索周邊最棒的美業店家</p>
-  </div>
-
-  <div id="popup" style="display:flex;">
-    <p>歡迎使用 Tint 美業地圖！</p>
-    <button onclick="startApp()">開始使用</button>
-  </div>
-
-  <div id="home-view" class="view" style="display:none;">
-    <h1>Tint 美業地圖</h1>
-    <p>讓你快速找到周邊的優質美業店家！</p>
-    <button onclick="startExploring()">開始探索</button>
+    <h1>Tint Maps</h1>
+    <p>找附近的美業店家</p>
   </div>
 
   <div id="map-view" class="view"></div>
-  <div id="swipe-view" class="view"></div>
 
-  <div id="bottom-nav">
-    <button onclick="switchView('map')">地圖模式</button>
-    <button onclick="switchView('swipe')">滑滑模式</button>
-    <button onclick="goToMyLocation()">回到我的位置</button>
+  <div id="swipe-view" class="view">
+    <div id="card-container"></div>
   </div>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-  </script>
-  
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM"></script>
-  <script src="script.js"></script>
+  <div id="home-view" class="view">
+    <h1>歡迎來到 Tint Town</h1>
+    <p>立即探索附近最美的美甲工作室，從地圖、滑卡、到一鍵分享</p>
+    <button onclick="startExploring()">開始探索</button>
+  </div>
+
+  <div id="bottom-nav">
+    <button onclick="switchView('home')">🏠<br>首頁</button>
+    <button onclick="switchView('map')">🗺<br>地圖</button>
+    <button onclick="switchView('swipe')">💘<br>滑卡</button>
+  </div>
+
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
 </body>
 </html>
