@@ -27,7 +27,6 @@ function initMap() {
     zoom: 12,
   });
 
-  switchLayer("town");
   loadSwipeData();
 }
 
@@ -40,8 +39,8 @@ function getUserLocation() {
       };
       userPosition = pos;
 
-      map.setCenter(pos);
-      map.setZoom(14);
+      map && map.setCenter(pos);
+      map && map.setZoom(14);
 
       new google.maps.Marker({
         position: pos,
@@ -79,15 +78,16 @@ async function loadSwipeData() {
 
   swipeData = rows.map(row => {
     const latlng = row.c[8]?.v || "";
+    if (!latlng || !latlng.includes(",")) return null;
     const [lat, lng] = latlng.split(",").map(Number);
     const dist = userPosition ? getDistanceKm(userPosition.lat, userPosition.lng, lat, lng) : 999;
     return {
       name: row.c[1]?.v || "",
       desc: row.c[6]?.v || "",
       photo: row.c[10]?.v || "https://i.imgur.com/Vs6fE3r.png",
-      distance: dist ? dist.toFixed(1) : "-"
+      distance: dist.toFixed(1)
     };
-  });
+  }).filter(Boolean);
 
   swipeData.sort((a, b) => a.distance - b.distance);
   renderSwipeCard();
@@ -111,26 +111,18 @@ function renderSwipeCard() {
 
 function switchView(view) {
   document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-  document.getElementById(`${view}-view`).style.display = 'flex';
+  const el = document.getElementById(`${view}-view`);
+  if (el) el.style.display = 'flex';
 }
 
 function applyTypeFilter() {
-  alert("（篩選功能待新增 UI）先這樣假裝你按了！");
+  alert("（篩選功能tint還沒做好）妳先這樣假裝沒看到！");
 }
 
 function goToMyLocation() {
   getUserLocation();
 }
 
-// 💅 漸層滑卡樣式注入
-const style = document.createElement('style');
-style.innerHTML = `
-.card {
-  transition: all 0.3s ease;
-  background: linear-gradient(to bottom right, #fff8f9, #fff);
+function switchLayer(layer) {
+  // 保留用不到的空殼，避免錯誤
 }
-.card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-}`;
-document.head.appendChild(style);
