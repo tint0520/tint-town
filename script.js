@@ -1,8 +1,9 @@
+// 優化後的 swipe.js
 let map;
 let swipeData = [];
 let userPosition = null;
-
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/12nFTJltWKVTVVBOe5RC9wQ4GWqgqcCO1bFkR-qMFmjs/gviz/tq?tqx=out:json";
+
 function startApp() {
   document.getElementById("popup").style.display = "none";
   document.getElementById("home-view").style.display = "flex";
@@ -69,17 +70,30 @@ function getDistanceKm(lat1, lng1, lat2, lng2) {
 
 async function loadSwipeData() {
   const res = await fetch(SHEET_URL);
-  const csv = await res.text();
-  const rows = csv.trim().split('\n').slice(1).map(row => row.split(','));
+  const raw = await res.text();
+  const json = JSON.parse(raw.substring(47).slice(0, -2));
+  const table = json.table.rows;
 
-  swipeData = rows.map(r => {
-    const [name, igLink, type, tags, desc, line, phone, web, latlng, addr, photo] = r;
-    if (!latlng || !latlng.includes(",")) return null;
+  swipeData = table.map(row => {
+    const get = i => row.c[i]?.v || "";
+    const latlng = get(8);
+    if (!latlng.includes(",")) return null;
     const [lat, lng] = latlng.split(",").map(Number);
     const distance = userPosition ? getDistanceKm(userPosition.lat, userPosition.lng, lat, lng).toFixed(1) : "-";
+
     return {
-      name, desc, photo, distance,
-      ig: igLink, line, phone, web, lat, lng
+      name: get(0),
+      ig: get(1),
+      type: get(2),
+      tags: get(3),
+      desc: get(4),
+      line: get(5),
+      phone: get(6),
+      web: get(7),
+      lat, lng,
+      addr: get(9),
+      photo: get(10),
+      distance
     };
   }).filter(Boolean);
 
@@ -94,26 +108,35 @@ function renderSwipeCards() {
   swipeData.forEach(store => {
     const card = document.createElement("div");
     card.className = "card";
+
+    const photo = store.photo || "https://via.placeholder.com/300x200?text=No+Image";
+    const shareLink = store.web || store.ig || store.line || window.location.href;
+
     card.innerHTML = `
-      <button class="share-btn" onclick="shareStore('${store.name}', '${store.web || store.ig || ""}')">🔗</button>
-      <img src="${store.photo}" alt="${store.name}" />
+      <button class="share-btn" onclick="shareStore('${store.name}', '${shareLink}')">🔗</button>
+      <img src="${photo}" alt="圖片" />
       <h3>${store.name}</h3>
       <p>${store.desc}</p>
       <p>📍 距離你約 ${store.distance} km</p>
-      ${store.ig ? `<a href="${store.ig}" target="_blank">IG</a>` : ""}
-      ${store.line ? `<a href="${store.line}" target="_blank">LINE</a>` : ""}
+      ${store.ig ? `<a href="${store.ig}" target="_blank">IG</a>` : "<span>未提供 IG</span>`}
+      ${store.line ? `<a href="${store.line}" target="_blank">LINE</a>` : "<span>未提供 LINE</span>`}
+      ${store.phone ? `<a href="tel:${store.phone}">📞 ${store.phone}</a>` : ""}
     `;
+
     container.appendChild(card);
+
+    new google.maps.Marker({
+      position: { lat: store.lat, lng: store.lng },
+      map,
+      title: store.name
+    });
   });
 }
 
 function shareStore(name, link) {
   const shareLink = link || window.location.href;
   if (navigator.share) {
-    navigator.share({
-      title: name,
-      url: shareLink
-    });
+    navigator.share({ title: name, url: shareLink });
   } else {
     navigator.clipboard.writeText(shareLink).then(() => {
       alert("連結已複製");
