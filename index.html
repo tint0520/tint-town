@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tint Town 滑卡收藏版</title>
+  <title>Tint Town 地圖 + 滑卡地點距離模式</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,26 +13,29 @@
       background: #fff7f9;
       overflow: hidden;
     }
-    #card-container, #fav-list {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
+    .view {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      display: none;
+    }
+    #map-view { z-index: 1; }
+    #swipe-view {
       background: #fff0f4;
-      z-index: 1;
+      z-index: 2;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 20px;
     }
     .card {
       width: 90%;
-      max-width: 320px;
+      max-width: 360px;
       background: white;
       border-radius: 16px;
       box-shadow: 0 6px 24px rgba(0,0,0,0.1);
       padding: 16px;
       text-align: center;
-      position: absolute;
-      transition: transform 0.4s ease, opacity 0.4s ease;
+      margin-bottom: 16px;
     }
     .card img {
       width: 100%;
@@ -47,27 +50,25 @@
     .card p {
       font-size: 14px;
       color: #555;
+      margin: 4px 0;
     }
-    #fav-list {
-      display: none;
-      padding: 20px;
-      overflow-y: scroll;
+    .card a {
+      display: inline-block;
+      margin: 6px;
+      font-size: 14px;
+      color: #d06e6e;
+      text-decoration: underline;
     }
-    .fav-item {
-      width: 90%;
-      max-width: 320px;
-      background: white;
-      border-radius: 12px;
-      padding: 12px;
-      margin: 10px 0;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    .fav-item strong { color: #d06e6e; font-size: 16px; }
-    .fav-item small { display: block; margin-top: 4px; color: #888; font-size: 12px; }
-    #toggle-btn {
+    #controls {
       position: fixed;
       top: 20px;
-      right: 20px;
+      left: 20px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #controls button {
       background: #ffe6eb;
       color: #d06e6e;
       border: none;
@@ -76,33 +77,52 @@
       font-size: 14px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: pointer;
-      z-index: 999;
     }
   </style>
 </head>
 <body>
-  <button id="toggle-btn" onclick="toggleView()">📋 收藏清單</button>
-  <div id="card-container"></div>
-  <div id="fav-list"></div>
+  <div id="controls">
+    <button onclick="switchView('map')">🗺 地圖模式</button>
+    <button onclick="switchView('swipe')">💘 滑卡模式</button>
+    <button onclick="goToMyLocation()">📍 我在這附近</button>
+  </div>
+
+  <div id="map-view" class="view"></div>
+  <div id="swipe-view" class="view"></div>
 
   <script>
-    const SHEET_ID = "1YsGmD_2EtrwjypWZqMU1n9H_pn-6NhZQcawC_-CpAN8";
-    const SHEET_NAME = "tint test";
-    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}`;
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1YsGmD_2EtrwjypWZqMU1n9H_pn-6NhZQcawC_-CpAN8/gviz/tq?sheet=tint%20test";
+    let map, userMarker, userLocation = null;
+    let swipeData = [], currentCard = 0;
 
-    let allData = [];
-    let currentIndex = 0;
-    let container = document.getElementById('card-container');
-    let favList = document.getElementById('fav-list');
-    let showingFavs = false;
+    function switchView(mode) {
+      ['map-view','swipe-view'].forEach(id => document.getElementById(id).style.display = 'none');
+      document.getElementById(`${mode}-view`).style.display = mode === 'map' ? 'block' : 'flex';
+      if (mode === 'swipe') showSwipeCard(currentCard);
+    }
 
-    async function loadData() {
+    function getDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return Math.round(R * c * 10) / 10; // km
+    }
+
+    async function initMap() {
+      map = new google.maps.Map(document.getElementById("map-view"), {
+        center: { lat: 23.8, lng: 121 }, zoom: 7
+      });
+
       const res = await fetch(SHEET_URL);
       const text = await res.text();
       const json = JSON.parse(text.substr(47).slice(0, -2));
       const rows = json.table.rows;
 
-      allData = rows.map(row => ({
+      swipeData = rows.map(row => ({
         name: row.c[0]?.v || '',
         link: row.c[1]?.v || '',
         type: row.c[2]?.v || '',
@@ -110,91 +130,86 @@
         desc: row.c[4]?.v || '',
         latlng: row.c[5]?.v || '',
         address: row.c[6]?.v || '',
-        photo: row.c[7]?.v || 'https://i.imgur.com/Vs6fE3r.png'
+        photo: row.c[7]?.v || 'https://i.imgur.com/Vs6fE3r.png',
+        ig: row.c[8]?.v || '',
+        line: row.c[9]?.v || '',
+        distance: 999
       }));
 
-      renderNextCard();
+      swipeData.forEach(d => {
+        if (!d.latlng.includes(",")) return;
+        const [lat, lng] = d.latlng.split(",").map(Number);
+        const marker = new google.maps.Marker({ position: { lat, lng }, map, title: d.name });
+        const info = new google.maps.InfoWindow({
+          content: `<div><strong>${d.name}</strong><br>${d.desc}<br><a href="${d.link}" target="_blank">🔗 前往</a><br><small>${d.address}</small></div>`
+        });
+        marker.addListener("click", () => info.open(map, marker));
+      });
+
+      switchView('map');
     }
 
-    function renderNextCard() {
-      if (currentIndex >= allData.length) {
-        container.innerHTML = '<p style="color:#999">✨ 沒有更多推薦了</p>';
-        return;
-      }
-      const data = allData[currentIndex];
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <img src="${data.photo}" alt="圖">
-        <h3>${data.name}</h3>
-        <p>${data.desc}</p>
-      `;
-      card.addEventListener('touchstart', handleTouchStart, false);
-      card.addEventListener('touchmove', handleTouchMove, false);
-      container.innerHTML = '';
-      container.appendChild(card);
+    function updateDistances() {
+      if (!userLocation) return;
+      swipeData.forEach(d => {
+        if (!d.latlng.includes(",")) return;
+        const [lat, lng] = d.latlng.split(",").map(Number);
+        d.distance = getDistance(userLocation.lat, userLocation.lng, lat, lng);
+      });
+      swipeData.sort((a, b) => a.distance - b.distance);
+      showSwipeCard(currentCard);
     }
 
-    let xDown = null;
-    function handleTouchStart(evt) {
-      xDown = evt.touches[0].clientX;
+    function showSwipeCard(i) {
+      const d = swipeData[i];
+      const view = document.getElementById('swipe-view');
+      if (!d) return view.innerHTML = '<p>✨ 沒有更多推薦了！</p>';
+      const lineShare = `https://line.me/R/msg/text/?${encodeURIComponent(`Tint 推薦店家：${d.name}\n${d.desc}\n${d.address}\n${d.link}`)}`;
+      view.innerHTML = `
+        <div class="card">
+          <img src="${d.photo}" alt="圖">
+          <h3>${d.name}</h3>
+          <p>${d.desc}</p>
+          <p>${d.address}</p>
+          <p>📍 距離你約 ${d.distance} 公里</p>
+          ${d.link ? `<a href="${d.link}" target="_blank">🔗 官方網站</a>` : ''}
+          ${d.ig ? `<a href="${d.ig}" target="_blank">📷 IG</a>` : ''}
+          ${d.line ? `<a href="${d.line}" target="_blank">💬 LINE</a>` : ''}
+          <a href="${lineShare}" target="_blank">📤 分享到 LINE</a>
+          <div style="margin-top:16px;">
+            ${i > 0 ? `<button onclick="prevCard()">⬅️ 上一間</button>` : '<span style="color:#ccc">⬅️ 左滑還沒解鎖</span>'}
+            <button onclick="nextCard()">➡️ 下一間</button>
+          </div>
+        </div>`;
     }
 
-    function handleTouchMove(evt) {
-      if (!xDown) return;
-      let xUp = evt.touches[0].clientX;
-      let xDiff = xDown - xUp;
-      if (Math.abs(xDiff) > 50) {
-        if (xDiff > 0) {
-          // left swipe
+    function nextCard() { if (currentCard < swipeData.length - 1) currentCard++; showSwipeCard(currentCard); }
+    function prevCard() { if (currentCard > 0) currentCard--; showSwipeCard(currentCard); }
+
+    function goToMyLocation() {
+      if (!navigator.geolocation) return alert("無法取得定位資訊");
+      navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        userLocation = { lat: latitude, lng: longitude };
+        map.setCenter(userLocation);
+        if (!userMarker) {
+          userMarker = new google.maps.Marker({
+            position: userLocation,
+            map,
+            title: "你的位置",
+            icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+          });
         } else {
-          saveToFav(allData[currentIndex]);
+          userMarker.setPosition(userLocation);
         }
-        currentIndex++;
-        renderNextCard();
-        xDown = null;
-      }
-    }
-
-    function saveToFav(item) {
-      let favs = JSON.parse(localStorage.getItem('tintFavs') || '[]');
-      if (!favs.some(f => f.name === item.name)) {
-        favs.push(item);
-        localStorage.setItem('tintFavs', JSON.stringify(favs));
-      }
-    }
-
-    function toggleView() {
-      showingFavs = !showingFavs;
-      if (showingFavs) {
-        document.getElementById('toggle-btn').textContent = '👈 回滑卡';
-        container.style.display = 'none';
-        favList.style.display = 'flex';
-        renderFavList();
-      } else {
-        document.getElementById('toggle-btn').textContent = '📋 收藏清單';
-        favList.style.display = 'none';
-        container.style.display = 'flex';
-      }
-    }
-
-    function renderFavList() {
-      let favs = JSON.parse(localStorage.getItem('tintFavs') || '[]');
-      favList.innerHTML = '';
-      favs.forEach(item => {
-        let div = document.createElement('div');
-        div.className = 'fav-item';
-        div.innerHTML = `
-          <strong>${item.name}</strong>
-          <p>${item.desc}</p>
-          <small>${item.address}</small>
-          <br><a href="${item.link}" target="_blank">🔗 前往店家</a>
-        `;
-        favList.appendChild(div);
+        updateDistances();
       });
     }
 
-    loadData();
+    window.initMap = initMap;
+  </script>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap">
   </script>
 </body>
 </html>
