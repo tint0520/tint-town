@@ -31,113 +31,73 @@
 
     .nav-btn { flex: 1; padding: 10px; text-align: center; color: #555; font-size:14px; }
 
-    .swiper-container {
-  height: 40%;  /* 原來 60% 的 80% */
-  padding-top: 60px;  /* 原來 20px 的 80% */
-}
+    .swiper-container { height: 55%; padding-top: 10px; }
 
-.swiper-slide {
-  width: 80%;  /* 原來 90% 的 80% */
-  border-radius: 20px;  /* 原來 15px 的 80% */
-  box-shadow: 0 1.6px 6.4px rgba(0,0,0,0.15);  /* 原來陰影的80% */
-  overflow-y: auto;background-color: #ffeff3;
-      position: relative; padding-bottom: 30px;
+    .swiper-slide {
+      width: 80%; border-radius: 12px; box-shadow: 0 1.6px 6.4px rgba(0,0,0,0.15);
+      overflow-y: auto; background-color: ffeff3;
     }
 
     .swiper-slide img { height: 160px; object-fit: cover; width: 100%; }
 
-    .store-info { padding: 10px; font-size:14px; word-wrap: break-word; }
-
-    .store-distance { position: absolute; bottom: 10px; right: 10px; font-size: 12px; color: #888; }
-
-  .favorite-btn {
-  position: absolute;
-  top: 10px;                /* 距離圖片上方位置 */
-  right: 10px;              /* 距離圖片右方位置 */
-  cursor: pointer;
-  font-size: 24px;          /* 愛心大小，可調整 */
-  color: #d63384;
-  z-index: 10;              /* 確保按鈕浮現在圖片之上 */
-}
+    .store-info { padding: 10px; font-size:14px; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
+ <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
   <script defer>
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
+   const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
 
-    let map, markers = [], stores = [], userLocation;
-
+    let map;
+let markers = []; 
+let stores = [];
+let userLocation;
+    
     function initMap() {
       map = new google.maps.Map(document.getElementById("map-view"), { center: { lat: 25.034, lng: 121.564 }, zoom: 14 });
-      navigator.geolocation.getCurrentPosition(pos => {
-        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        map.setCenter(userLocation);
-      });
+      navigator.geolocation.getCurrentPosition(pos => map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }));
       loadStoreData();
       showView('map-view');
     }
 
     function loadStoreData() {
-  Papa.parse(SHEET_URL, { download: true, header: true, complete: results => {
-    stores = results.data;
-    markers.forEach(marker => marker.setMap(null)); // 清除舊marker
-    markers = [];
+      Papa.parse(SHEET_URL, { download: true, header: true, complete: results => {
+        stores = results.data;
+        markers.forEach(m => m.setMap(null)); markers = [];
 
-    stores.forEach(store => {
-      if (store.latlng) {
-        const [lat, lng] = store.latlng.split(",").map(Number);
-        store.distance = userLocation ? calcDistance(userLocation.lat, userLocation.lng, lat, lng) : '--';
-
-        // 建立新的地圖標記(marker)
-        const marker = new google.maps.Marker({
-          position: { lat, lng },
-          map,
-          title: store.name
+        stores.forEach(store => {
+          if (!store.latlng) return;
+          const [lat, lng] = store.latlng.split(",").map(Number);
+          const marker = new google.maps.Marker({ position: { lat, lng }, map });
+          markers.push(marker);
         });
 
-        markers.push(marker);  // 儲存marker
-
-        // 點擊標記跳出店家卡片
-        marker.addListener('click', () => {
-          alert(`店家名稱：${store.name}\n地址：${store.address}\n距離：${store.distance} km`);
-        });
-      }
-    });
-
-    stores.sort((a, b) => a.distance - b.distance); // 距離排序
-    initSwiper(); // 更新卡片顯示
-  }});
-}
-
-    function calcDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371; const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
-      return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
+        new markerClusterer.MarkerClusterer({ markers, map });
+        initSwiper();
+      }});
     }
 
-     function initSwiper() {
-      document.querySelector('.swiper-wrapper').innerHTML = stores.map(store => `
+    function initSwiper() {
+      const swiperWrapper = document.querySelector('.swiper-wrapper');
+      swiperWrapper.innerHTML = stores.map(store => `
         <div class="swiper-slide">
-          <div style="position: relative;">
-            <img src="${store.photo}" alt="${store.name}">
-            <div class="favorite-btn">❤️</div>
-          </div>
+          <img src="${store.photo}" alt="${store.name}">
           <div class="store-info">
             <h5>${store.name}</h5>
             <p>${store.desc}</p>
-            <p>類型：${store.type}</p>
-            <p>標籤：${store.tags}</p>
+            <p>類型：${store.type} | 標籤：${store.tags}</p>
             <p>地址：${store.address}</p>
             <p>營業時間：${store.hours}</p>
-            <p><a href="${store.link}">🔗網站</a> | <a href="${store.ig}">📸IG</a> | <a href="${store.line}">💬LINE</a></p>
+            <p>
+              <a href="${store.link}" target="_blank">🔗 網站</a> |
+              <a href="${store.ig}" target="_blank">📸 IG</a> |
+              <a href="${store.line}" target="_blank">💬 LINE</a>
+            </p>
           </div>
-          <div class="store-distance">距離：${store.distance} km</div>
-          <div class="favorite-btn">♡</div>
         </div>`).join('');
+
       new Swiper('.swiper-container', { slidesPerView: 'auto', spaceBetween: 15, centeredSlides: true });
     }
 
@@ -149,11 +109,16 @@
   </script>
 </head>
 <body>
-  <div class="top-banner"><span class="banner-text">Tint Maps</span></div>
+  <div class="top-banner">
+    <span class="banner-text">Tint Maps</span>
+  </div>
 
   <div id="map-view"></div>
-  <div id="card-view" class="swiper-container"><div class="swiper-wrapper"></div></div>
-  <div id="favorite-view" class="p-4">這裡會顯示收藏的店家列表。</div>
+  <div id="card-view" class="swiper-container">
+    <div class="swiper-wrapper"></div>
+  </div>
+
+  <div id="favorite-view" class="p-4">我的收藏（尚未開發）</div>
 
   <div id="bottom-nav">
     <div class="nav-btn" onclick="showView('map-view')">🗺️<br>地圖找店</div>
