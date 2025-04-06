@@ -51,10 +51,12 @@
   <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
-  <script defer>
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
 
+    
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
+    
+  <script defer>
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
     function initMap() {
       map = new google.maps.Map(document.getElementById("map-view"), { center: { lat: 25.034, lng: 121.564 }, zoom: 14 });
       navigator.geolocation.getCurrentPosition(pos => {
@@ -73,118 +75,9 @@
   </script>
 </head>
 <body>
-  <!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tint Maps 美業地圖 App</title>
-
-  <!-- 載入字型與CSS框架 -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css"/>
-
-  <style>
-    html, body { height: 100%; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
-
-    #map-view, #card-view, #favorite-view { display: none; height: calc(100% - 60px); }
-
-    #bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
-      background: white; display: flex; border-radius: 15px 15px 0 0;
-      box-shadow: 0 -3px 10px rgba(0,0,0,0.15); z-index: 10;
-    }
-
-    .nav-btn { flex: 1; padding: 10px; text-align: center; color: #555; font-size:14px; }
-
-  .swiper-container {
-  height: 40%;  /* 原來 60% 的 80% */
-  padding-top: 60px;  /* 原來 20px 的 80% */
-}
-
-.swiper-slide {
-  width: 80%;  /* 原來 90% 的 80% */
-  border-radius: 20px;  /* 原來 15px 的 80% */
-  box-shadow: 0 1.6px 6.4px rgba(0,0,0,0.15);  /* 原來陰影的80% */
-  overflow-y: auto;
-  background-color: #fff;
-}
-
-    .swiper-slide img { height: 150px; object-fit: cover; width: 100%; }
-
-    .store-info { padding: 10px; }
-
-    .close-btn {
-      position: absolute; right: 10px; top: 10px; background-color: rgba(0,0,0,0.5);
-      color: white; border-radius: 50%; width: 25px; height: 25px; display: flex;
-      align-items: center; justify-content: center; cursor: pointer;
-    }
-
-    .top-banner {
-  width: 100%;
-  height: 50px; /* Banner高度 */
-  background-color: #ffe4ec; /* 淺粉色調背景，你可以再調整 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.banner-text {
-  font-size: 20px;       /* 文字大小 */
-  color: #d63384;        /* 文字顏色（深粉色）*/
-  font-weight: bold;     /* 字體加粗 */
-}
-  </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=這裡要換成你的API金鑰&callback=initMap"></script>
-
-  <script defer>
-    const SHEET_URL = "你的GoogleSheet連結";
-
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map-view"), { center: { lat: 25.034, lng: 121.564 }, zoom: 14 });
-      navigator.geolocation.getCurrentPosition(pos => {
-        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        map.setCenter(userLocation);
-      });
-      loadStoreData();
-      showView('map-view');
-    }
-
-    function showView(viewId) {
-      ['map-view','card-view','favorite-view'].forEach(id=>{
-        document.getElementById(id).style.display=(id===viewId)?'block':'none';
-      });
-    }
-  </script>
-</head>
-<body>
-  <!-- 頂部Banner（純文字版） -->
-<div class="top-banner">
-  <span class="banner-text">Tint Maps</span>
-</div>
-
-  <div id="map-view"></div>
-  <div id="card-view" class="swiper-container">
-    <div class="swiper-wrapper"></div>
+  <div class="top-banner">
+    <img src="你的Banner圖片網址" alt="Tint Maps 美業地圖" class="banner-img">
   </div>
-
-  <div id="favorite-view" class="p-4">我的收藏（尚未開發）</div>
-
-  <div id="bottom-nav">
-    <div class="nav-btn" onclick="showView('map-view')">🗺️<br>地圖找店</div>
-    <div class="nav-btn" onclick="showView('card-view')">📸<br>卡片探店</div>
-    <div class="nav-btn" onclick="showView('favorite-view')">❤️<br>我的收藏</div>
-  </div>
-
-</body>
-</html>
-
 
   <div id="map-view"></div>
   <div id="card-view" class="swiper-container">
