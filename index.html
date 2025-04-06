@@ -229,10 +229,16 @@ function showMapMarker(index) {
         <p>地址：${store.address}</p>
         <p>營業時間：${store.hours}</p>
         <p>
-          <a href="${store.link}">🔗我要預約</a> | 
-          <a href="${store.ig}">📸Instagram</a> | 
-          <a href="${store.line}">💬LINE</a>
-        </p>
+  <a href="${store.link}">🔗我要預約</a> | 
+  <a href="${store.ig}">
+    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/instagram.svg" style="width:16px;height:16px; vertical-align: text-bottom;">
+    Instagram
+  </a> | 
+  <a href="${store.line}">
+    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/line.svg" style="width:16px;height:16px; vertical-align: text-bottom;">
+    LINE
+  </a>
+</p>
       </div>
       <div class="store-distance">
         距離：${store.distance} km | 
