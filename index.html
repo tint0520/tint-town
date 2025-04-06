@@ -158,7 +158,7 @@ function initMap() {
       <div class="swiper-slide">
         <div style="position: relative;">
           <img src="${store.photo}" alt="${store.name}">
-         //<div class="favorite-btn">❤️</div//
+         
         </div>
         <div class="store-info">
           <h5>${store.name}</h5>
@@ -173,7 +173,12 @@ function initMap() {
             <a href="${store.line}">💬LINE</a>
           </p>
         </div>
-        <div class="store-distance">距離：${store.distance} km</div>
+        <div class="store-distance">
+          距離：${store.distance} km | 
+          <span class="map-btn" data-index="${index}">🗺️地圖位置</span> | 
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${store.latlng}" target="_blank">🚗導航</a>
+        </div>
+      </div>
       </div>`).join('');
 
     swiper = new Swiper('.swiper-container', { 
@@ -181,7 +186,14 @@ function initMap() {
       spaceBetween: 15, 
       centeredSlides: true 
     });
-  }
+  // 新增地圖位置按鈕點擊事件
+  document.querySelectorAll('.map-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const index = btn.getAttribute('data-index');
+      showMapMarker(index);
+    });
+  });
+}
 
   function showView(viewId) {
     ['map-view','card-view','favorite-view'].forEach(id=>{
