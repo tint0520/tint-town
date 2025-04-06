@@ -3,7 +3,10 @@ self.addEventListener("install", e => {
     caches.open("tint-map-cache").then(cache => {
       return cache.addAll([
         "./index.html",
-        "./manifest.json"
+        "./manifest.json",
+        "./style.css",
+        "./script.js",
+        "https://maps.googleapis.com/maps/api/js?key=你的API_KEY"
       ]);
     })
   );
