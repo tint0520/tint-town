@@ -1,4 +1,4 @@
-// script.js for Tint Maps 地圖 + 滑卡 (滑動＋分享)
+// script.js for Tint Maps 地圖 + 滑卡（依據新欄位順序調整）
 let map;
 let swipeData = [];
 let userPosition = null;
@@ -70,11 +70,11 @@ async function loadSwipeData() {
   const rows = csv.trim().split('\n').slice(1).map(r => r.split(','));
 
   swipeData = rows.map(r => {
-    const [name, ig, type, tags, desc, line, phone, web, latlng, addr, photo] = r;
+    const [name, link, type, tags, desc, latlng, address, hours, ig, line] = r;
     if (!latlng || !latlng.includes(",")) return null;
     const [lat, lng] = latlng.split(",").map(Number);
     const distance = userPosition ? getDistanceKm(userPosition.lat, userPosition.lng, lat, lng).toFixed(1) : "-";
-    return { name, desc, photo, ig, line, distance };
+    return { name, desc, link, ig, line, address, hours, lat, lng, distance };
   }).filter(Boolean);
 
   swipeData.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
@@ -89,11 +89,12 @@ function renderSwipeCards() {
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-      <button class="share-btn" onclick="shareStore('${store.name}', '${store.ig || store.line || ''}')">🔗</button>
-      <img src="${store.photo}" alt="${store.name}" />
+      <button class="share-btn" onclick="shareStore('${store.name}', '${store.link || store.ig || ''}')">🔗</button>
       <h3>${store.name}</h3>
       <p>${store.desc}</p>
-      <p>📍 距離你約 ${store.distance} km</p>
+      <p>📍 ${store.address}</p>
+      <p>⏰ ${store.hours}</p>
+      <p>🚶 距離你約 ${store.distance} km</p>
       ${store.ig ? `<a href="${store.ig}" target="_blank">IG</a>` : ""}
       ${store.line ? `<a href="${store.line}" target="_blank">LINE</a>` : ""}
     `;
