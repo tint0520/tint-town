@@ -1,8 +1,10 @@
 const CACHE_NAME = 'tint-maps-cache-v1';
+
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
+  './',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
   'https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css',
@@ -14,7 +16,9 @@ const urlsToCache = [
 // 安裝快取
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(urlsToCache);
+    })
   );
 });
 
@@ -27,16 +31,18 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// 更新快取
+// 清除舊快取
 self.addEventListener('activate', event => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    caches.keys().then(cacheNames => Promise.all(
-      cacheNames.map(cacheName => {
-        if (!cacheWhitelist.includes(cacheName)) {
-          return caches.delete(cacheName);
-        }
-      })
-    ))
+    caches.keys().then(cacheNames =>
+      Promise.all(
+        cacheNames.map(cacheName => {
+          if (!cacheWhitelist.includes(cacheName)) {
+            return caches.delete(cacheName);
+          }
+        })
+      )
+    )
   );
 });
