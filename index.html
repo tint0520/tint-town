@@ -323,7 +323,41 @@ document.addEventListener('click', e => {
     updateFavoriteIcons(); // 更新星星顯示狀態
   }
 });
+// 顯示收藏店家列表
+function renderFavorites() {
+  let html = '';
+  const favoriteStores = stores.filter(store => favorites.includes(store.name));
 
+  if (favoriteStores.length === 0) {
+    html = '<p>你還沒有收藏任何店家喔！</p>';
+  } else {
+    favoriteStores.forEach(store => {
+      html += `
+      <div class="card mb-3">
+        <img src="${store.photo}" class="card-img-top">
+        <div class="card-body">
+          <h5>${store.name}</h5>
+          <p>${store.desc}</p>
+          <a href="${store.link}" target="_blank">🔗 預約店家</a>
+        </div>
+      </div>`;
+    });
+  }
+  document.getElementById('favorite-list').innerHTML = html;
+}
+
+// 當切換到『我的收藏』頁面時呼叫（更新版的 showView 函數）
+function showView(viewId) {
+  ['map-view','card-view','favorite-view'].forEach(id=>{
+    document.getElementById(id).style.display=(id===viewId)?'block':'none';
+  });
+
+  // document.getElementById('my-location-btn').style.display = (viewId === 'map-view') ? 'block' : 'none';
+
+  if (viewId === 'favorite-view') {
+    renderFavorites(); // 開啟我的收藏時，載入收藏店家
+  }
+}
 </script>
 </head>
 <body>
