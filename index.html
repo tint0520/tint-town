@@ -432,36 +432,42 @@ function renderFavorites() {
     e.preventDefault(); // 防止瀏覽器自動顯示提示
     deferredPrompt = e;
 
-    const customBtn = document.createElement('button');
-    customBtn.textContent = '📲 將 Tint Maps 加到手機主畫面';
-    customBtn.style.position = 'fixed';
-    customBtn.style.bottom = '80px';
-    customBtn.style.left = '50%';
-    customBtn.style.transform = 'translateX(-50%)';
-    customBtn.style.padding = '12px 20px';
-    customBtn.style.borderRadius = '12px';
-    customBtn.style.background = '#d63384';
-    customBtn.style.color = 'white';
-    customBtn.style.fontSize = '16px';
-    customBtn.style.zIndex = '9999';
-    customBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
-    customBtn.style.border = 'none';
+    // 檢查是否已經加過主畫面
+    if (!localStorage.getItem('alreadyInstalled')) {
+      const customBtn = document.createElement('button');
+      customBtn.textContent = '📲 將 Tint Maps 加到手機主畫面';
+      customBtn.style.position = 'fixed';
+      customBtn.style.bottom = '80px';
+      customBtn.style.left = '50%';
+      customBtn.style.transform = 'translateX(-50%)';
+      customBtn.style.padding = '12px 20px';
+      customBtn.style.borderRadius = '12px';
+      customBtn.style.background = '#d63384';
+      customBtn.style.color = 'white';
+      customBtn.style.fontSize = '16px';
+      customBtn.style.zIndex = '9999';
+      customBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+      customBtn.style.border = 'none';
 
-    document.body.appendChild(customBtn);
+      document.body.appendChild(customBtn);
 
-    customBtn.addEventListener('click', () => {
-      customBtn.style.display = 'none';
-      deferredPrompt.prompt();
+      customBtn.addEventListener('click', () => {
+        customBtn.style.display = 'none';
+        deferredPrompt.prompt();
 
-      deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('使用者接受安裝');
-        } else {
-          console.log('使用者拒絕安裝');
-        }
-        deferredPrompt = null;
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('使用者接受安裝');
+          } else {
+            console.log('使用者拒絕安裝');
+          }
+
+          // 記錄狀態，不再顯示提示
+          localStorage.setItem('alreadyInstalled', 'true');
+          deferredPrompt = null;
+        });
       });
-    });
+    }
   });
 </script>
 </body>
