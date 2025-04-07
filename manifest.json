@@ -1,0 +1,21 @@
+{
+  "name": "Tint Maps 美業地圖",
+  "short_name": "Tint Maps",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffecf2",
+  "theme_color": "#d63384",
+  "description": "快速尋找附近美業店家",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
