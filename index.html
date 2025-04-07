@@ -113,6 +113,17 @@
 .store-info a {
   margin-right: 8px; /* 各個連結間距稍微拉開一點 */
 }
+.favorite-btn {
+  position: absolute;
+  top: 10px; 
+  right: 10px; 
+  cursor: pointer;
+  font-size: 24px; 
+  color: #ffd700; /* 金黃色星星 */
+  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  z-index: 5;
+}
+    
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
@@ -224,6 +235,7 @@ function showMapMarker(index) {
     <div class="swiper-slide">
       <div style="position: relative;">
         <img src="${store.photo}" alt="${store.name}">
+        <div class="favorite-btn" data-index="${index}">⭐️</div> 
       </div>
       <div class="store-info">
         <h5>${store.name}</h5>
