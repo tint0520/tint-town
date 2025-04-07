@@ -13,7 +13,11 @@
   <style>
     html, body { height: 100%; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
 
-    #map-view, #card-view, #favorite-view { display: none; height: calc(100% - 110px); }
+  #map-view, #card-view, #favorite-view { 
+  display: none; 
+  height: calc(100% - 110px); 
+}
+
 /* 卡片探店模式的整體背景（卡片後面的背景顏色） */
 #card-view {
   background-color: #fff3f7; /* 非常柔和的淺粉色，比 banner 更淺 */
@@ -133,26 +137,23 @@
   <script defer>
    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
 
-    let map;
-let markers = []; 
-let stores = [];
-let userLocation;
-    
+let map, markers = [], stores = [], userLocation, swiper, favorites;
+
+// 初始化 Google 地圖
 function initMap() {
   map = new google.maps.Map(document.getElementById("map-view"), {
     center: { lat: 25.034, lng: 121.564 },
-zoom: 13,   // ← 這裡要加上逗號 (,)
-    streetViewControl: false,     
-  mapTypeControl: false,        
-  fullscreenControl: false,     
-  zoomControl: false            // 移除縮放按鈕
-});
+    zoom: 13,
+    streetViewControl: false,
+    mapTypeControl: false,
+    fullscreenControl: false,
+    zoomControl: false
+  });
 
   navigator.geolocation.getCurrentPosition(pos => {
     userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
     map.setCenter(userLocation);
-    
-    // 建立使用者位置標記（使用你提供的新圖標）
+
     new google.maps.Marker({
       position: userLocation,
       map,
@@ -163,7 +164,7 @@ zoom: 13,   // ← 這裡要加上逗號 (,)
       }
     });
 
-    loadStoreData(); // 載入店家資料
+    loadStoreData();
   }, () => {
     alert('無法取得你的定位，距離功能將無法使用。');
     loadStoreData();
@@ -172,10 +173,11 @@ zoom: 13,   // ← 這裡要加上逗號 (,)
   showView('map-view');
 }
 
-    function loadStoreData() {
+// 載入店家資料
+function loadStoreData() {
   Papa.parse(SHEET_URL, { download: true, header: true, complete: results => {
     stores = results.data;
-    markers.forEach(m => m.setMap(null)); 
+    markers.forEach(m => m.setMap(null));
     markers = [];
 
     stores.forEach((store, index) => {
@@ -183,59 +185,45 @@ zoom: 13,   // ← 這裡要加上逗號 (,)
       const [lat, lng] = store.latlng.split(",").map(Number);
       store.distance = userLocation ? calcDistance(userLocation.lat, userLocation.lng, lat, lng) : '--';
 
-      // 建立店家圖標(marker)並放到地圖上
-      const marker = new google.maps.Marker({ 
-  position: { lat, lng }, 
-  map, 
-  title: store.name,
-  icon: {
-    url: "https://github.com/tint0520/tint-town/blob/main/local_store.png?raw=true",
-    scaledSize: new google.maps.Size(35, 35), // 自訂圖標大小（你可調整數值）
-  }
-});
+      const marker = new google.maps.Marker({
+        position: { lat, lng },
+        map,
+        title: store.name,
+        icon: {
+          url: "https://github.com/tint0520/tint-town/blob/main/local_store.png?raw=true",
+          scaledSize: new google.maps.Size(35, 35)
+        }
+      });
 
-      // 點擊地圖圖標(marker)後跳出該店家卡片
       marker.addListener('click', () => {
-        showCardForStore(index); // 點擊後顯示對應的店家卡片
+        showCardForStore(index);
       });
 
       markers.push(marker);
     });
 
-    // 叢集功能
     new markerClusterer.MarkerClusterer({ markers, map });
-
     stores.sort((a, b) => a.distance - b.distance);
     initSwiper();
   }});
 }
-function showMapMarker(index) {
-  const store = stores[index];
-  const [lat, lng] = store.latlng.split(",").map(Number);
 
-  // 切換回地圖
-  showView('map-view');
-
-  // 移動地圖中心至店家位置
-  map.setCenter({lat, lng});
-  map.setZoom(17); // 調整地圖縮放程度（可自訂）
+// 計算距離
+function calcDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
 }
 
- function calcDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
-    return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
-  }
-
-  let swiper; // ← 新增的變數 (Swiper的實體)
-
-  function initSwiper() {
-  document.querySelector('.swiper-wrapper').innerHTML = stores.map((store, index) => 
+// 初始化 Swiper 和卡片內容
+function initSwiper() {
+  document.querySelector('.swiper-wrapper').innerHTML = stores.map((store, index) => `
     <div class="swiper-slide">
       <div style="position: relative;">
         <img src="${store.photo}" alt="${store.name}">
-        <div class="favorite-btn" data-index="${index}">⭐️</div> 
+        <div class="favorite-btn" data-index="${index}">⭐️</div>
       </div>
       <div class="store-info">
         <h5>${store.name}</h5>
@@ -245,146 +233,116 @@ function showMapMarker(index) {
         <p>地址：${store.address}</p>
         <p>營業時間：${store.hours}</p>
         <p>
-  <a href="${store.link}">🔗我要預約</a> | 
-  <a href="${store.ig}">
-    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/instagram.svg" style="width:16px;height:16px; vertical-align: text-bottom;">
-    Instagram
-  </a> | 
-  <a href="${store.line}">
-    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/line.svg" style="width:16px;height:16px; vertical-align: text-bottom;">
-    LINE
-  </a>
-</p>
+          <a href="${store.link}">🔗我要預約</a> | 
+          <a href="${store.ig}">
+            <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/instagram.svg" style="width:16px;height:16px; vertical-align:text-bottom;">
+            Instagram
+          </a> | 
+          <a href="${store.line}">
+            <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/line.svg" style="width:16px;height:16px; vertical-align:text-bottom;">
+            LINE
+          </a>
+        </p>
       </div>
       <div class="store-distance">
         距離：${store.distance} km | 
         <span class="map-btn" data-index="${index}">🗺️地圖位置</span> | 
         <a href="https://www.google.com/maps/dir/?api=1&destination=${store.latlng}" target="_blank">🚗導航</a>
       </div>
-    </div>).join('');
+    </div>`).join('');
 
-  swiper = new Swiper('.swiper-container', { 
-    slidesPerView: 'auto', 
-    spaceBetween: 15, 
-    centeredSlides: true 
+  swiper = new Swiper('.swiper-container', {
+    slidesPerView: 'auto',
+    spaceBetween: 15,
+    centeredSlides: true
   });
 
   document.querySelectorAll('.map-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const index = btn.getAttribute('data-index');
-      showMapMarker(index);
+      showMapMarker(btn.getAttribute('data-index'));
     });
   });
-     // ⭐️ 就放這邊！（函數內最後一行）
-  updateFavoriteIcons(); 
 
-  // 當切換到『我的收藏』頁面時呼叫（更新版的 showView 函數）
+  updateFavoriteIcons();
+}
+
+// 切換頁面顯示
 function showView(viewId) {
-  ['map-view','card-view','favorite-view'].forEach(id=>{
-    document.getElementById(id).style.display=(id===viewId)?'block':'none';
+  ['map-view','card-view','favorite-view'].forEach(id => {
+    document.getElementById(id).style.display = (id === viewId) ? 'block' : 'none';
   });
 
-  // document.getElementById('my-location-btn').style.display = (viewId === 'map-view') ? 'block' : 'none';
-
   if (viewId === 'favorite-view') {
-    renderFavorites(); // 開啟我的收藏時，載入收藏店家
+    renderFavorites();
   }
 }
 
-  function showCardForStore(index) {
-    showView('card-view');
-    swiper.slideTo(index, 500, true);
-  }
-    // ⬇️ 收藏功能程式碼從這裡開始 ⬇️
+// 顯示地圖位置
+function showMapMarker(index) {
+  const [lat, lng] = stores[index].latlng.split(",").map(Number);
+  map.setCenter({lat, lng});
+  map.setZoom(17);
+  showView('map-view');
+}
 
-// 初始化收藏列表（從localStorage抓）
-let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+// 顯示卡片
+function showCardForStore(index) {
+  showView('card-view');
+  swiper.slideTo(index, 500, true);
+}
+
+// 初始化收藏列表
+favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
 // 檢查是否已收藏
 function isFavorited(storeName) {
   return favorites.includes(storeName);
 }
 
-// 更新收藏狀態的星星
+// 更新收藏星星圖示
 function updateFavoriteIcons() {
   document.querySelectorAll('.favorite-btn').forEach(btn => {
     const index = btn.getAttribute('data-index');
-    const store = stores[index];
-    btn.textContent = isFavorited(store.name) ? '🌟' : '⭐️';
+    btn.textContent = isFavorited(stores[index].name) ? '🌟' : '⭐️';
   });
 }
 
-// 點擊星星切換收藏狀態
+// 點擊收藏星星切換狀態
 document.addEventListener('click', e => {
   if (e.target.classList.contains('favorite-btn')) {
     const index = e.target.getAttribute('data-index');
-    const store = stores[index];
-    if (isFavorited(store.name)) {
-      favorites = favorites.filter(name => name !== store.name); // 取消收藏
+    const storeName = stores[index].name;
+
+    if (isFavorited(storeName)) {
+      favorites = favorites.filter(name => name !== storeName);
     } else {
-      favorites.push(store.name); // 新增收藏
+      favorites.push(storeName);
     }
+
     localStorage.setItem('favorites', JSON.stringify(favorites));
-    updateFavoriteIcons(); // 更新星星顯示狀態
+    updateFavoriteIcons();
   }
 });
-// 顯示收藏店家列表
+
+// 渲染收藏列表
 function renderFavorites() {
   let html = '';
   const favoriteStores = stores.filter(store => favorites.includes(store.name));
 
-  if (favoriteStores.length === 0) {
-    html = '<p>你還沒有收藏任何店家喔！</p>';
-  } else {
-    favoriteStores.forEach(store => {
-      html += 
-      <div class="card mb-3">
-        <img src="${store.photo}" class="card-img-top">
-        <div class="card-body">
-          <h5>${store.name}</h5>
-          <p>${store.desc}</p>
-          <a href="${store.link}" target="_blank">🔗 預約店家</a>
-        </div>
-      </div>;
-    });
-  }
+  html = favoriteStores.length 
+    ? favoriteStores.map(store => `
+        <div class="card mb-3">
+          <img src="${store.photo}" class="card-img-top">
+          <div class="card-body">
+            <h5>${store.name}</h5>
+            <p>${store.desc}</p>
+            <a href="${store.link}" target="_blank">🔗 預約店家</a>
+          </div>
+        </div>`).join('')
+    : '<p>你還沒有收藏任何店家喔！</p>';
+
   document.getElementById('favorite-list').innerHTML = html;
 }
-
-// 當切換到『我的收藏』頁面時呼叫（更新版的 showView 函數）
-function showView(viewId) {
-  ['map-view','card-view','favorite-view'].forEach(id=>{
-    document.getElementById(id).style.display=(id===viewId)?'block':'none';
-  });
-
-  // document.getElementById('my-location-btn').style.display = (viewId === 'map-view') ? 'block' : 'none';
-
-  if (viewId === 'favorite-view') {
-    renderFavorites(); // 開啟我的收藏時，載入收藏店家
-  }
-}
-    function showCardForStore(index) {
-  showView('card-view');
-  swiper.slideTo(index, 500, true);
-}
-    // ⬆️ 收藏功能程式碼到這裡結束 ⬆️
-
-// ⬇️ 其他初始化與Swiper相關函數 ⬇️
-swiper = new Swiper('.swiper-container', { 
-  slidesPerView: 'auto', 
-  spaceBetween: 15, 
-  centeredSlides: true 
-});
-
-document.querySelectorAll('.map-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const index = btn.getAttribute('data-index');
-    showMapMarker(index);
-  });
-});
-
-// ⭐️ 這裡才呼叫收藏星星函數（initSwiper函式最後一行）
-updateFavoriteIcons(); 
 </script>
 </head>
 <body>
@@ -393,7 +351,7 @@ updateFavoriteIcons();
   <div class="banner-subtext">找附近的美業店家</div>
 </div>
 
-  <div id="map-view"></div>
+  <div id="map-view" style="width: 100%; height: 100%;"></div>
   <div id="card-view" class="swiper-container">
     <div class="swiper-wrapper"></div>
   </div>
