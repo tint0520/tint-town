@@ -9,123 +9,373 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css"/>
-  <link rel="manifest" href="./manifest.json">
-  
+<link rel="manifest" href="./manifest.json">
   <style>
     html, body { height: 100%; margin: 0; padding: 0; font-family: 'Noto Sans TC', sans-serif; }
 
-    #map-view, #card-view, #favorite-view { display: none; height: calc(100% - 110px); }
-    #card-view { background-color: #fff3f7; }
+  #map-view, #card-view, #favorite-view { 
+  display: none; 
+  height: calc(100% - 110px); 
+}
 
-    .top-banner { width: 100%; height: 85px; background-color: #ffecf2; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .banner-text { font-size: 26px; color: #d63384; font-weight: bold; }
-    .banner-subtext { font-size: 16px; color: #888; }
+/* 卡片探店模式的整體背景（卡片後面的背景顏色） */
+#card-view {
+  background-color: #fff3f7; /* 非常柔和的淺粉色，比 banner 更淺 */
+}
+    .top-banner {
+  width: 100%;
+  height: 85px; /* 調整高度給兩行文字更多空間 */
+  background-color: #ffecf2; /* 原有淺粉色背景 */
+  display: flex;
+  flex-direction: column; /* 垂直排列 */
+  align-items: center; /* 水平置中 */
+  justify-content: center; /* 垂直置中 */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
 
-    .map-btn { color: #0d6efd; cursor: pointer; text-decoration: underline; }
-    .map-btn:hover { color: #0a58ca; }
+    .map-btn {
+  color: #0d6efd; /* 藍色 */
+  cursor: pointer;
+  text-decoration: underline;
+}
 
-    .store-info p { margin-bottom: 6px; }
-    .store-distance { position: relative; margin-top: 14px; padding-bottom: 12px; font-size: 14px; color: #888; text-align: left; padding-left: 15px; }
+.map-btn:hover {
+  color: #0a58ca;
+}
+    /* 所有段落之間距離 */
+.store-info p {
+  margin-bottom: 6px; /* 一般段落間距，依需求調整 */
+}
+   .store-distance {
+  position: relative;  /* 改成相對位置，讓距離貼著上方資訊 */
+  margin-top: 20px;     /* 距離上面店家資訊的間距 */
+  font-size: 15px;
+  color: #888;
+  text-align: left;    /* 距離文字靠左對齊 */
+  padding-left: 10px;  /* 跟上面資訊左側對齊 */
+}
+.banner-text {
+  font-size: 26px; /* 主標題大小 */
+  color: #d63384;
+  font-weight: bold;
+}
 
-    #bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: white; display: flex; border-radius: 15px 15px 0 0; box-shadow: 0 -3px 10px rgba(0,0,0,0.15); z-index: 10; }
+.banner-subtext {
+  font-size: 16px; /* 次標題大小 */
+  color: #888; /* 淺灰色文字 */
+}
+    #bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
+      background: white; display: flex; border-radius: 15px 15px 0 0;
+      box-shadow: 0 -3px 10px rgba(0,0,0,0.15); z-index: 10;
+    }
+
     .nav-btn { flex: 1; padding: 10px; text-align: center; color: #555; font-size:14px; }
 
     .swiper-container { height: 50%; padding-top: 20px; }
-    .swiper-slide { width: 82%; border-radius: 18px; box-shadow: 0 1.6px 6.4px rgba(0,0,0,0.15); overflow-y: auto; background-color: #ffffff; }
-    .swiper-slide img { height: 200px; object-fit: cover; width: 100%; }
 
-    .store-info { padding: 25px 20px 10px 20px; font-size: 14px; line-height: 1.6; }
-    .store-info h5, .store-info p { padding-left: 10px; }
-    .store-info p:last-child { text-align: center; }
-
-    .store-distance { text-align: center; padding-left: 0; }
-
-    .store-info a { margin-right: 8px; }
-    .favorite-btn { position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 24px; color: #ffd700; text-shadow: 0 1px 3px rgba(0,0,0,0.2); z-index: 5; }
-
-    /* 歡迎畫面樣式 */
-    #splash-screen {
-      position: fixed;
-      z-index: 9999;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: #ffecf2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+    .swiper-slide {
+      width: 82%; border-radius: 18px; box-shadow: 0 1.6px 6.4px rgba(0,0,0,0.15);
+      overflow-y: auto; background-color: #ffffff; /* 純白色背景 */ 
     }
-    .loader {
-      width: 24px;
-      height: 24px;
-      border: 3px solid #fff;
-      border-top: 3px solid #d63384;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+
+    .swiper-slide img { height: 200px; object-fit: cover; width: 100%; }  // 卡片圖片高度
+
+   /* 卡片內文增加空間感 */
+.store-info {
+  padding: 25px 20px 10px 20px; /* 上方距離變成25px，文字區塊整體向下移動 */
+  font-size: 14px;
+  line-height: 1.6;
+}
+/* 調整內文不要貼齊左側 */
+.store-info h5,
+.store-info p {
+  padding-left: 10px; /* 標題和內文稍微往右移動 */
+}
+
+/* 我要預約、IG、LINE 連結置中 */
+.store-info p:last-child {
+  text-align: center;
+}
+
+/* 距離、地圖位置、導航置中 */
+.store-distance {
+  text-align: center; /* 文字水平置中 */
+  padding-left: 0; /* 移除原本的padding-left */
+}
+/* 底部的距離區塊 */
+.store-distance {
+  margin-top: 14px; /* 距離上方資訊再拉開一點 */
+  padding-bottom: 12px; /* 距離底部也拉開一點 */
+  font-size: 14px;
+  color: #888;
+  text-align: left;
+  padding-left: 15px; /* 與上方資訊左側對齊 */
+}
+
+/* 調整連結之間的間隔 */
+.store-info a {
+  margin-right: 8px; /* 各個連結間距稍微拉開一點 */
+}
+.favorite-btn {
+  position: absolute;
+  top: 10px; 
+  right: 10px; 
+  cursor: pointer;
+  font-size: 24px;  
+  color: #ffd700; /* 金黃色星星 */
+  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  z-index: 5;
+}
+    
   </style>
 
-  <!-- 載入函式庫 -->
   <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
+ <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
+  <script defer>
+   const SHEET_URL = "https://docs.google.com/spreadsheets/d/1iKVLOjHA2w29Y96Hlg78hgivnjV-ntx2LJvhFpeiFUs/export?format=csv&gid=0";
+
+let map, markers = [], stores = [], userLocation, swiper, favorites;
+
+// 初始化 Google 地圖
+function initMap() {
+  map = new google.maps.Map(document.getElementById("map-view"), {
+    center: { lat: 25.034, lng: 121.564 },
+    zoom: 13,
+    streetViewControl: false,
+    mapTypeControl: false,
+    fullscreenControl: false,
+    zoomControl: false
+  });
+
+  navigator.geolocation.getCurrentPosition(pos => {
+    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    map.setCenter(userLocation);
+
+    new google.maps.Marker({
+      position: userLocation,
+      map,
+      title: "你的位置",
+      icon: {
+        url: "https://github.com/tint0520/tint-town/blob/main/local_peo.png?raw=true",
+        scaledSize: new google.maps.Size(40, 40)
+      }
+    });
+
+    loadStoreData();
+  }, () => {
+    alert('無法取得你的定位，距離功能將無法使用。');
+    loadStoreData();
+  });
+
+  showView('map-view');
+}
+
+// 載入店家資料
+function loadStoreData() {
+  Papa.parse(SHEET_URL, { download: true, header: true, complete: results => {
+    stores = results.data;
+    markers.forEach(m => m.setMap(null));
+    markers = [];
+
+    stores.forEach((store, index) => {
+      if (!store.latlng) return;
+      const [lat, lng] = store.latlng.split(",").map(Number);
+      store.distance = userLocation ? calcDistance(userLocation.lat, userLocation.lng, lat, lng) : '--';
+
+      const marker = new google.maps.Marker({
+        position: { lat, lng },
+        map,
+        title: store.name,
+        icon: {
+          url: "https://github.com/tint0520/tint-town/blob/main/local_store.png?raw=true",
+          scaledSize: new google.maps.Size(35, 35)
+        }
+      });
+
+      marker.addListener('click', () => {
+        showCardForStore(index);
+      });
+
+      markers.push(marker);
+    });
+
+    new markerClusterer.MarkerClusterer({ markers, map });
+    stores.sort((a, b) => a.distance - b.distance);
+    initSwiper();
+  }});
+}
+
+// 計算距離
+function calcDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
+}
+
+// 初始化 Swiper 和卡片內容
+function initSwiper() {
+  document.querySelector('.swiper-wrapper').innerHTML = stores.map((store, index) => `
+    <div class="swiper-slide">
+      <div style="position: relative;">
+        <img src="${store.photo}" alt="${store.name}">
+        <div class="favorite-btn" data-index="${index}">⭐️</div>
+      </div>
+      <div class="store-info">
+        <h5>${store.name}</h5>
+        <p>簡介：${store.desc}</p>
+        <p>服務：${store.type}</p>
+        <p>標籤：${store.tags}</p>
+        <p>地址：${store.address}</p>
+        <p>營業時間：${store.hours}</p>
+        <p>
+          <a href="${store.link}">🔗我要預約</a> | 
+          <a href="${store.ig}">
+            <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/instagram.svg" style="width:16px;height:16px; vertical-align:text-bottom;">
+            Instagram
+          </a> | 
+          <a href="${store.line}">
+            <img src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/line.svg" style="width:16px;height:16px; vertical-align:text-bottom;">
+            LINE
+          </a>
+        </p>
+      </div>
+      <div class="store-distance">
+        距離：${store.distance} km | 
+        <span class="map-btn" data-index="${index}">🗺️地圖位置</span> | 
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${store.latlng}" target="_blank">🚗導航</a>
+      </div>
+    </div>`).join('');
+
+  swiper = new Swiper('.swiper-container', {
+    slidesPerView: 'auto',
+    spaceBetween: 15,
+    centeredSlides: true
+  });
+
+  document.querySelectorAll('.map-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      showMapMarker(btn.getAttribute('data-index'));
+    });
+  });
+
+  updateFavoriteIcons();
+}
+
+// 切換頁面顯示
+function showView(viewId) {
+  ['map-view','card-view','favorite-view'].forEach(id => {
+    document.getElementById(id).style.display = (id === viewId) ? 'block' : 'none';
+  });
+
+  if (viewId === 'favorite-view') {
+    renderFavorites();
+  }
+}
+
+// 顯示地圖位置
+function showMapMarker(index) {
+  const [lat, lng] = stores[index].latlng.split(",").map(Number);
+  map.setCenter({lat, lng});
+  map.setZoom(17);
+  showView('map-view');
+}
+
+// 顯示卡片
+function showCardForStore(index) {
+  showView('card-view');
+  swiper.slideTo(index, 500, true);
+}
+
+// 初始化收藏列表
+favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+// 檢查是否已收藏
+function isFavorited(storeName) {
+  return favorites.includes(storeName);
+}
+
+// 更新收藏星星圖示
+function updateFavoriteIcons() {
+  document.querySelectorAll('.favorite-btn').forEach(btn => {
+    const index = btn.getAttribute('data-index');
+    btn.textContent = isFavorited(stores[index].name) ? '🌟' : '⭐️';
+  });
+}
+
+// 點擊收藏星星切換狀態
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('favorite-btn')) {
+    const index = e.target.getAttribute('data-index');
+    const storeName = stores[index].name;
+
+    if (isFavorited(storeName)) {
+      favorites = favorites.filter(name => name !== storeName);
+    } else {
+      favorites.push(storeName);
+    }
+
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    updateFavoriteIcons();
+  }
+});
+
+// 渲染收藏列表
+function renderFavorites() {
+  let html = '';
+  const favoriteStores = stores.filter(store => favorites.includes(store.name));
+
+  html = favoriteStores.length 
+    ? favoriteStores.map(store => `
+        <div class="card mb-3">
+          <img src="${store.photo}" class="card-img-top">
+          <div class="card-body">
+            <h5>${store.name}</h5>
+            <p>${store.desc}</p>
+            <a href="${store.link}" target="_blank">🔗 預約店家</a>
+          </div>
+        </div>`).join('')
+    : '<p>你還沒有收藏任何店家喔！</p>';
+
+  document.getElementById('favorite-list').innerHTML = html;
+}
+</script>
 </head>
 <body>
-
-<!-- 歡迎畫面 -->
-<div id="splash-screen">
-  <img src="icon-192.png" alt="Tint Maps Logo" style="width:100px; height:100px; margin-bottom:20px;" />
-  <div class="loader"></div>
-  <p style="color:#d63384;margin-top:16px;">載入資料中…</p>
-</div>
-
-<!-- 頁首區 -->
-<div class="top-banner">
+  <div class="top-banner">
   <div class="banner-text">Tint Maps</div>
   <div class="banner-subtext">找附近的美業店家</div>
 </div>
 
-<!-- 地圖 / 卡片 / 收藏 區塊 -->
-<div id="map-view"></div>
-<div id="card-view" class="swiper-container"><div class="swiper-wrapper"></div></div>
+  <div id="map-view"></div>
+  <div id="card-view" class="swiper-container">
+    <div class="swiper-wrapper"></div>
+  </div>
+
 <div id="favorite-view" class="p-4">
   <h4>我的收藏</h4>
   <div id="favorite-list"></div>
 </div>
 
-<!-- 底部導航列 -->
-<div id="bottom-nav">
-  <div class="nav-btn" onclick="showView('map-view')">🗺️<br>地圖找店</div>
-  <div class="nav-btn" onclick="showView('card-view')">📸<br>卡片探店</div>
-  <div class="nav-btn" onclick="showView('favorite-view')">❤️<br>我的收藏</div>
-</div>
+  <div id="bottom-nav">
+    <div class="nav-btn" onclick="showView('map-view')">🗺️<br>地圖找店</div>
+    <div class="nav-btn" onclick="showView('card-view')">📸<br>卡片探店</div>
+    <div class="nav-btn" onclick="showView('favorite-view')">❤️<br>我的收藏</div>
+  </div>
 
-<!-- Service Worker 註冊 -->
 <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').then(reg => {
+    navigator.serviceWorker.register('./sw.js').then(registration => {
       console.log('ServiceWorker 註冊成功！');
     }).catch(err => {
       console.log('ServiceWorker 註冊失敗: ', err);
     });
   }
-
-  // 歡迎畫面淡出控制
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      const splash = document.getElementById('splash-screen');
-      if (splash) splash.style.display = 'none';
-    }, 2000);
-  });
 </script>
-
-<!-- 你原本的主邏輯 JS 建議可放在另一個 script.js 引入，或貼在這裡（太長我就不貼回來囉） -->
 
 </body>
 </html>
