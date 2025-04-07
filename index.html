@@ -275,7 +275,10 @@ function showMapMarker(index) {
       showMapMarker(index);
     });
   });
+     // ⭐️ 就放這邊！（函數內最後一行）
+  updateFavoriteIcons(); 
 }
+
 
   function showView(viewId) {
     ['map-view','card-view','favorite-view'].forEach(id=>{
@@ -287,6 +290,39 @@ function showMapMarker(index) {
     showView('card-view');
     swiper.slideTo(index, 500, true);
   }
+    // ⬇️ 收藏功能程式碼從這裡開始 ⬇️
+
+// 初始化收藏列表（從localStorage抓）
+let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+// 檢查是否已收藏
+function isFavorited(storeName) {
+  return favorites.includes(storeName);
+}
+
+// 更新收藏狀態的星星
+function updateFavoriteIcons() {
+  document.querySelectorAll('.favorite-btn').forEach(btn => {
+    const index = btn.getAttribute('data-index');
+    const store = stores[index];
+    btn.textContent = isFavorited(store.name) ? '🌟' : '⭐️';
+  });
+}
+
+// 點擊星星切換收藏狀態
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('favorite-btn')) {
+    const index = e.target.getAttribute('data-index');
+    const store = stores[index];
+    if (isFavorited(store.name)) {
+      favorites = favorites.filter(name => name !== store.name); // 取消收藏
+    } else {
+      favorites.push(store.name); // 新增收藏
+    }
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    updateFavoriteIcons(); // 更新星星顯示狀態
+  }
+});
 
 </script>
 </head>
