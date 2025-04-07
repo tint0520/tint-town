@@ -127,7 +127,36 @@
   text-shadow: 0 1px 3px rgba(0,0,0,0.2);
   z-index: 5;
 }
-    
+    /* 歡迎畫面樣式 */
+#splash-screen {
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffecf2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 載入圈圈動畫 */
+.loader {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #fff;
+  border-top: 3px solid #d63384;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
@@ -345,7 +374,18 @@ function renderFavorites() {
 }
 </script>
 </head>
+
+
+  
 <body>
+
+<!-- 歡迎畫面 -->
+<div id="splash-screen">
+  <img src="icon-192.png" alt="Tint Maps Logo" style="width:100px; height:100px; margin-bottom:20px;" />
+  <div class="loader"></div>
+  <p style="color:#d63384;margin-top:16px;">載入資料中…</p>
+</div>
+  
   <div class="top-banner">
   <div class="banner-text">Tint Maps</div>
   <div class="banner-subtext">找附近的美業店家</div>
@@ -367,14 +407,23 @@ function renderFavorites() {
     <div class="nav-btn" onclick="showView('favorite-view')">❤️<br>我的收藏</div>
   </div>
 
+<!-- Service Worker 註冊 -->
 <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').then(registration => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
       console.log('ServiceWorker 註冊成功！');
     }).catch(err => {
       console.log('ServiceWorker 註冊失敗: ', err);
     });
   }
+
+  // 歡迎畫面淡出控制
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const splash = document.getElementById('splash-screen');
+      if (splash) splash.style.display = 'none';
+    }, 2000);
+  });
 </script>
 
 </body>
