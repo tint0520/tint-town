@@ -5,17 +5,17 @@
   "display": "standalone",
   "background_color": "#ffecf2",
   "theme_color": "#d63384",
-  "description": "快速尋找附近美業店家",
+  "description": "快速尋找附近的美業店家",
   "icons": [
-  {
-    "src": "icon-192.png",
-    "sizes": "192x192",
-    "type": "image/png"
-  },
-  {
-    "src": "icon-512.png",
-    "sizes": "512x512",
-    "type": "image/png"
-  }
-]
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
