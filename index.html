@@ -470,5 +470,57 @@ function renderFavorites() {
     }
   });
 </script>
+  <!-- Safari 專用 加入主畫面提示 -->
+<div id="ios-install-prompt" style="
+  display: none;
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  font-size: 15px;
+  color: #333;
+  text-align: center;
+  z-index: 9999;
+  max-width: 80%;
+">
+  <div style="margin-bottom: 10px;">
+    📲 將 <strong>Tint Maps</strong> 加到主畫面<br>
+    ① 點擊 Safari 下方分享鈕<br>
+    ② 選擇「加入主畫面」
+  </div>
+  <button onclick="dismissIOSPrompt()" style="
+    background-color: #d63384;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+  ">我知道了</button>
+</div>
+
+<script>
+  function isIosSafari() {
+    const ua = window.navigator.userAgent;
+    return /iPhone|iPad|iPod/i.test(ua) && /Safari/i.test(ua) && !/CriOS|FxiOS|OPiOS/i.test(ua);
+  }
+
+  function dismissIOSPrompt() {
+    localStorage.setItem('iosInstallDismissed', 'true');
+    document.getElementById('ios-install-prompt').style.display = 'none';
+  }
+
+  window.addEventListener('load', () => {
+    if (isIosSafari() && !window.navigator.standalone && !localStorage.getItem('iosInstallDismissed')) {
+      setTimeout(() => {
+        document.getElementById('ios-install-prompt').style.display = 'block';
+      }, 3000); // 3秒後顯示提示
+    }
+  });
+</script>
 </body>
 </html>
