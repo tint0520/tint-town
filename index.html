@@ -402,10 +402,11 @@ function renderFavorites() {
 </div>
 
   <div id="bottom-nav">
-    <div class="nav-btn" onclick="showView('map-view')">🗺️<br>地圖找店</div>
-    <div class="nav-btn" onclick="showView('card-view')">📸<br>卡片探店</div>
-    <div class="nav-btn" onclick="showView('favorite-view')">❤️<br>我的收藏</div>
-  </div>
+  <img class="nav-icon" src="img/icons/icon-map.svg" onclick="showView('map-view')" />
+  <img class="nav-icon" src="img/icons/icon-search.svg" onclick="toggleSearch()" />
+  <img class="nav-icon" src="img/icons/icon-heart.svg" onclick="showView('favorite-view')" />
+  <img class="nav-icon" src="img/icons/icon-user.svg" />
+</div>
 
 <!-- Service Worker 註冊 -->
 <script>
