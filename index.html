@@ -470,68 +470,30 @@ function renderFavorites() {
     }
   });
 </script>
-  <!-- Safari 專用 加入主畫面提示 -->
-<div id="ios-install-prompt" style="
-  display: none;
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.95);
-  padding: 16px 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  font-size: 15px;
-  color: #333;
-  text-align: center;
-  z-index: 9999;
-  max-width: 80%;
-">
+ <!-- ✅ Safari 專用主畫面提示 -->
+<div id="ios-install-prompt" style="display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+background: rgba(255, 255, 255, 0.95); padding: 16px 20px; border-radius: 12px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 15px; color: #333; text-align: center;
+z-index: 9999; max-width: 80%;">
   <div style="margin-bottom: 10px;">
     📲 將 <strong>Tint Maps</strong> 加到主畫面<br>
     ① 點擊 Safari 下方分享鈕<br>
     ② 選擇「加入主畫面」
   </div>
-  <button onclick="dismissIOSPrompt()" style="
-    background-color: #d63384;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    font-size: 14px;
-    cursor: pointer;
-  ">我知道了</button>
+  <button onclick="dismissIOSPrompt()" style="background-color: #d63384; color: white; border: none;
+  border-radius: 8px; padding: 8px 16px; font-size: 14px; cursor: pointer;">我知道了</button>
 </div>
 
-<script>
-  function isIosSafari() {
-    const ua = window.navigator.userAgent;
-    return /iPhone|iPad|iPod/i.test(ua) && /Safari/i.test(ua) && !/CriOS|FxiOS|OPiOS/i.test(ua);
-  }
-
-  function dismissIOSPrompt() {
-    localStorage.setItem('iosInstallDismissed', 'true');
-    document.getElementById('ios-install-prompt').style.display = 'none';
-  }
-
-  window.addEventListener('load', () => {
-    if (isIosSafari() && !window.navigator.standalone && !localStorage.getItem('iosInstallDismissed')) {
-      setTimeout(() => {
-        document.getElementById('ios-install-prompt').style.display = 'block';
-      }, 3000); // 3秒後顯示提示
-    }
-  });
- 
-
 <!-- ✅ GPS 浮窗 -->
-<div id="gps-permission" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-background: #fff; padding: 20px; border-radius: 10px; z-index: 9999; box-shadow: 0 0 10px rgba(0,0,0,0.2); text-align:center;">
+<div id="gps-permission" style="display: none; position: fixed; top: 50%; left: 50%;
+transform: translate(-50%, -50%); background: #fff; padding: 20px; border-radius: 10px;
+z-index: 9999; box-shadow: 0 0 10px rgba(0,0,0,0.2); text-align:center;">
   <p>📍 為了幫你找附近的店家，請允許定位</p>
   <button onclick="requestLocation()">允許定位</button>
   <button onclick="dismissLocationPopup()">稍後再說</button>
 </div>
 
-<!-- ✅ 首次導覽教學浮窗 -->
+<!-- ✅ 首次導覽浮窗 -->
 <div id="onboarding" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
 z-index: 9998; background: rgba(255,255,255,0.95); display: flex; align-items: center;
 justify-content: center; flex-direction: column;">
@@ -552,7 +514,7 @@ justify-content: center; flex-direction: column;">
   </div>
 </div>
 
-<!-- ✅ 平台成長數據浮窗 -->
+<!-- ✅ 成長數據動畫浮窗 -->
 <div id="growth-toast" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%);
 background:#fff3f7; color:#d63384; font-weight:bold; font-size:15px; padding:12px 20px;
 border-radius:20px; box-shadow:0 3px 10px rgba(0,0,0,0.15); z-index:9999;">
@@ -561,6 +523,15 @@ border-radius:20px; box-shadow:0 3px 10px rgba(0,0,0,0.15); z-index:9999;">
 
 <!-- ✅ 控制邏輯 -->
 <script>
+function isIosSafari() {
+  const ua = window.navigator.userAgent;
+  return /iPhone|iPad|iPod/i.test(ua) && /Safari/i.test(ua) && !/CriOS|FxiOS|OPiOS/i.test(ua);
+}
+function dismissIOSPrompt() {
+  localStorage.setItem('iosInstallDismissed', 'true');
+  document.getElementById('ios-install-prompt').style.display = 'none';
+}
+
 function animateNumber(targetEl, from, to, duration) {
   const start = performance.now();
   const step = (timestamp) => {
@@ -576,7 +547,6 @@ function nextStep(step) {
   document.querySelectorAll('.onboarding-step').forEach(el => el.style.display = 'none');
   document.getElementById(`step-${step}`).style.display = 'block';
 }
-
 function endOnboarding() {
   document.getElementById('onboarding').style.display = 'none';
   localStorage.setItem('onboarded', 'true');
@@ -592,13 +562,18 @@ function requestLocation() {
     alert('無法取得位置');
   });
 }
-
 function dismissLocationPopup() {
   document.getElementById('gps-permission').style.display = 'none';
   localStorage.setItem('gpsAllowed', 'false');
 }
 
 window.addEventListener('load', () => {
+  if (isIosSafari() && !window.navigator.standalone && !localStorage.getItem('iosInstallDismissed')) {
+    setTimeout(() => {
+      document.getElementById('ios-install-prompt').style.display = 'block';
+    }, 3000);
+  }
+
   const toast = document.getElementById('growth-toast');
   const now = Date.now();
   const startTime = now - (7 * 24 * 60 * 60 * 1000);
@@ -621,6 +596,5 @@ window.addEventListener('load', () => {
   }
 });
 </script>
-
 </body>
 </html>
