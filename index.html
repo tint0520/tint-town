@@ -521,10 +521,9 @@ function renderFavorites() {
       }, 3000); // 3秒後顯示提示
     }
   });
-  <!-- ✅ [1/1] index.html 全功能整合：歡迎畫面 + 導覽教學 + GPS 提示 + 成長浮窗 -->
-<!-- 🔼 貼到原本 <body> 開頭下方，保留 splash 畫面 -->
+ 
 
-<!-- ✅ GPS 授權提示浮窗 -->
+<!-- ✅ GPS 浮窗 -->
 <div id="gps-permission" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
 background: #fff; padding: 20px; border-radius: 10px; z-index: 9999; box-shadow: 0 0 10px rgba(0,0,0,0.2); text-align:center;">
   <p>📍 為了幫你找附近的店家，請允許定位</p>
@@ -560,7 +559,7 @@ border-radius:20px; box-shadow:0 3px 10px rgba(0,0,0,0.15); z-index:9999;">
 ✨ 今天新增 <span id="today-count">0</span> 家，已有 <span id="total-count">0</span> 人使用 Tint Maps！
 </div>
 
-<!-- ✅ 導覽/授權/數據功能邏輯 -->
+<!-- ✅ 控制邏輯 -->
 <script>
 function animateNumber(targetEl, from, to, duration) {
   const start = performance.now();
@@ -588,7 +587,7 @@ function requestLocation() {
   navigator.geolocation.getCurrentPosition(pos => {
     console.log('✅ 定位成功', pos);
     localStorage.setItem('gpsAllowed', 'true');
-    location.reload(); // 重新整理
+    location.reload();
   }, () => {
     alert('無法取得位置');
   });
@@ -599,34 +598,29 @@ function dismissLocationPopup() {
   localStorage.setItem('gpsAllowed', 'false');
 }
 
-// ✅ 主畫面初始化時：檢查要不要顯示導覽 / 定位 / 數據動畫
 window.addEventListener('load', () => {
-  // 成長數字動畫
   const toast = document.getElementById('growth-toast');
   const now = Date.now();
-  const startTime = now - (7 * 24 * 60 * 60 * 1000); // 一週前
+  const startTime = now - (7 * 24 * 60 * 60 * 1000);
   const secondsSince = Math.floor((now - startTime) / 1000);
   const growthPerSecond = 1 / 60;
   const totalGrowth = Math.floor(secondsSince * growthPerSecond);
   const total = 1000 + totalGrowth;
-  const today = Math.floor(86400 * growthPerSecond); // 24hr * 60 * 60
+  const today = Math.floor(86400 * growthPerSecond);
 
   animateNumber(document.getElementById('today-count'), 0, today, 1500);
   animateNumber(document.getElementById('total-count'), total - 50, total, 2000);
   toast.style.display = 'block';
   setTimeout(() => toast.style.display = 'none', 5000);
 
-  // 顯示定位提示
   if (!localStorage.getItem('gpsAllowed')) {
     document.getElementById('gps-permission').style.display = 'block';
   }
-
-  // 首次導覽
   if (!localStorage.getItem('onboarded')) {
     document.getElementById('onboarding').style.display = 'flex';
   }
 });
 </script>
-<!-- ✅ 請貼在 </body> 前 -->
+
 </body>
 </html>
