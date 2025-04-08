@@ -521,6 +521,112 @@ function renderFavorites() {
       }, 3000); // 3秒後顯示提示
     }
   });
+  <!-- ✅ [1/1] index.html 全功能整合：歡迎畫面 + 導覽教學 + GPS 提示 + 成長浮窗 -->
+<!-- 🔼 貼到原本 <body> 開頭下方，保留 splash 畫面 -->
+
+<!-- ✅ GPS 授權提示浮窗 -->
+<div id="gps-permission" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+background: #fff; padding: 20px; border-radius: 10px; z-index: 9999; box-shadow: 0 0 10px rgba(0,0,0,0.2); text-align:center;">
+  <p>📍 為了幫你找附近的店家，請允許定位</p>
+  <button onclick="requestLocation()">允許定位</button>
+  <button onclick="dismissLocationPopup()">稍後再說</button>
+</div>
+
+<!-- ✅ 首次導覽教學浮窗 -->
+<div id="onboarding" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+z-index: 9998; background: rgba(255,255,255,0.95); display: flex; align-items: center;
+justify-content: center; flex-direction: column;">
+  <div class="onboarding-step" id="step-1">
+    <h2 style="color:#d63384;">📦 滑動卡片</h2>
+    <p>左右滑動瀏覽所有店家</p>
+    <button onclick="nextStep(2)">下一步</button>
+  </div>
+  <div class="onboarding-step" id="step-2" style="display:none;">
+    <h2 style="color:#d63384;">⭐ 收藏功能</h2>
+    <p>點星星可收藏喜愛的店家</p>
+    <button onclick="nextStep(3)">下一步</button>
+  </div>
+  <div class="onboarding-step" id="step-3" style="display:none;">
+    <h2 style="color:#d63384;">📍 地圖找店</h2>
+    <p>點選地圖圖標可查看店家</p>
+    <button onclick="endOnboarding()">我知道了</button>
+  </div>
+</div>
+
+<!-- ✅ 平台成長數據浮窗 -->
+<div id="growth-toast" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%);
+background:#fff3f7; color:#d63384; font-weight:bold; font-size:15px; padding:12px 20px;
+border-radius:20px; box-shadow:0 3px 10px rgba(0,0,0,0.15); z-index:9999;">
+✨ 今天新增 <span id="today-count">0</span> 家，已有 <span id="total-count">0</span> 人使用 Tint Maps！
+</div>
+
+<!-- ✅ 導覽/授權/數據功能邏輯 -->
+<script>
+function animateNumber(targetEl, from, to, duration) {
+  const start = performance.now();
+  const step = (timestamp) => {
+    const progress = Math.min((timestamp - start) / duration, 1);
+    const value = Math.floor(progress * (to - from) + from);
+    targetEl.textContent = value;
+    if (progress < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function nextStep(step) {
+  document.querySelectorAll('.onboarding-step').forEach(el => el.style.display = 'none');
+  document.getElementById(`step-${step}`).style.display = 'block';
+}
+
+function endOnboarding() {
+  document.getElementById('onboarding').style.display = 'none';
+  localStorage.setItem('onboarded', 'true');
+}
+
+function requestLocation() {
+  document.getElementById('gps-permission').style.display = 'none';
+  navigator.geolocation.getCurrentPosition(pos => {
+    console.log('✅ 定位成功', pos);
+    localStorage.setItem('gpsAllowed', 'true');
+    location.reload(); // 重新整理
+  }, () => {
+    alert('無法取得位置');
+  });
+}
+
+function dismissLocationPopup() {
+  document.getElementById('gps-permission').style.display = 'none';
+  localStorage.setItem('gpsAllowed', 'false');
+}
+
+// ✅ 主畫面初始化時：檢查要不要顯示導覽 / 定位 / 數據動畫
+window.addEventListener('load', () => {
+  // 成長數字動畫
+  const toast = document.getElementById('growth-toast');
+  const now = Date.now();
+  const startTime = now - (7 * 24 * 60 * 60 * 1000); // 一週前
+  const secondsSince = Math.floor((now - startTime) / 1000);
+  const growthPerSecond = 1 / 60;
+  const totalGrowth = Math.floor(secondsSince * growthPerSecond);
+  const total = 1000 + totalGrowth;
+  const today = Math.floor(86400 * growthPerSecond); // 24hr * 60 * 60
+
+  animateNumber(document.getElementById('today-count'), 0, today, 1500);
+  animateNumber(document.getElementById('total-count'), total - 50, total, 2000);
+  toast.style.display = 'block';
+  setTimeout(() => toast.style.display = 'none', 5000);
+
+  // 顯示定位提示
+  if (!localStorage.getItem('gpsAllowed')) {
+    document.getElementById('gps-permission').style.display = 'block';
+  }
+
+  // 首次導覽
+  if (!localStorage.getItem('onboarded')) {
+    document.getElementById('onboarding').style.display = 'flex';
+  }
+});
 </script>
+<!-- ✅ 請貼在 </body> 前 -->
 </body>
 </html>
