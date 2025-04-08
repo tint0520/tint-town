@@ -5,142 +5,135 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tint Maps Demo</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" rel="stylesheet"/>
   <style>
     html, body {
-      margin: 0; padding: 0; height: 100%; font-family: 'Noto Sans TC', sans-serif;
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans TC', sans-serif;
+      height: 100%;
+      overflow: hidden;
     }
     #map {
-      height: 100%; width: 100%;
+      width: 100%;
+      height: 100%;
+      position: absolute;
     }
-    .bottom-sheet {
+    .card-container {
       position: fixed;
-      left: 0; right: 0; bottom: 0;
-      background: #fff; border-radius: 20px 20px 0 0;
-      box-shadow: 0 -2px 12px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease;
+      bottom: 80px;
+      left: 0;
+      right: 0;
+      padding: 0 20px;
       z-index: 10;
     }
-    .bottom-sheet-header {
-      text-align: center; padding: 10px;
-      border-bottom: 1px solid #eee;
+    .card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+      padding: 16px;
+      margin: auto;
+      max-width: 360px;
+      transition: transform 0.3s ease;
     }
-    .card-list {
-      display: flex; overflow-x: auto; padding: 10px;
-      scroll-snap-type: x mandatory;
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      color: #d63384;
     }
-    .store-card {
-      flex: 0 0 85%; scroll-snap-align: start;
-      background: #fff3f7; border-radius: 16px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      margin-right: 12px; padding: 12px;
+    .card p {
+      margin: 4px 0;
+      color: #555;
+      font-size: 14px;
     }
-    .store-card h3 {
-      margin: 0; font-size: 18px; color: #d63384;
+    .card .tags {
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
     }
-    .store-card p { margin: 6px 0; font-size: 14px; }
-    .store-actions {
-      display: flex; justify-content: space-around; margin-top: 12px;
+    .tag {
+      background: #ffeef4;
+      color: #d63384;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
     }
-    .store-actions a {
-      text-decoration: none; color: #d63384; font-size: 14px;
+    .bottom-nav {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 10px 20px;
+      border-radius: 30px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      z-index: 15;
     }
-    .nav-bar {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      display: flex; justify-content: space-around; align-items: center;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 8px; z-index: 20;
+    .nav-icon {
+      width: 42px;
+      height: 42px;
+      background: #fce4ec;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
     }
-    .nav-bar img {
-      width: 36px; height: 36px; padding: 6px;
-      background: #fff; border-radius: 50%;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    .nav-icon:hover {
+      background: #f8bbd0;
+    }
+    .nav-icon img {
+      width: 24px;
+      height: 24px;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <div class="bottom-sheet" id="cardSheet">
-    <div class="bottom-sheet-header">Tint Maps 精選</div>
-    <div class="card-list" id="cardList"></div>
+  <div class="card-container">
+    <div class="card">
+      <h3>Pink Beauty 美甲美睫</h3>
+      <p>服務項目：美甲、美睫</p>
+      <p>距離：0.5 公里｜接客方式：預約</p>
+      <p>地址：台北市中山區</p>
+      <div class="tags">
+        <div class="tag">Instagram</div>
+        <div class="tag">LINE</div>
+        <div class="tag">預約</div>
+        <div class="tag">導航</div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="nav-icon"><img src="img/icons/icon-map.svg" alt="地圖" /></div>
+    <div class="nav-icon"><img src="img/icons/icon-search.svg" alt="搜尋" /></div>
+    <div class="nav-icon"><img src="img/icons/icon-heart.svg" alt="收藏" /></div>
+    <div class="nav-icon"><img src="img/icons/icon-user.svg" alt="帳號" /></div>
   </div>
 
-  <div class="nav-bar">
-    <img src="img/icons/icon-map.svg" onclick="showMap()" />
-    <img src="img/icons/icon-search.svg" onclick="alert('搜尋功能 demo 中')" />
-    <img src="img/icons/icon-heart.svg" onclick="alert('收藏功能 demo 中')" />
-    <img src="img/icons/icon-user.svg" onclick="alert('個人頁面 demo 中')" />
-  </div>
-
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap" async defer></script>
   <script>
-    const stores = [
-      {
-        name: "Lumi 護膚所",
-        type: "美甲 / 美睫",
-        mode: "預約制",
-        district: "台北市大安區",
-        latlng: "25.0330,121.5654",
-        distance: "0.6 km",
-        desc: "深層清粉＋保濕導入專業護理",
-        ig: "#", line: "#", nav: "https://maps.google.com?q=25.0330,121.5654"
-      },
-      {
-        name: "晴美美甲",
-        type: "美甲 / 手部保養",
-        mode: "現場+預約",
-        district: "台北市信義區",
-        latlng: "25.0345,121.5621",
-        distance: "1.1 km",
-        desc: "凝膠造型專門店，百種款式任選",
-        ig: "#", line: "#", nav: "https://maps.google.com?q=25.0345,121.5621"
-      }
-    ];
-
-    let map;
     function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
+      const map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 25.034, lng: 121.564 },
         zoom: 15,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false
+        disableDefaultUI: true,
       });
 
-      stores.forEach((store, index) => {
-        const [lat, lng] = store.latlng.split(",").map(Number);
-        const marker = new google.maps.Marker({
-          position: { lat, lng },
-          map,
-          title: store.name
-        });
-        marker.addListener('click', () => {
-          document.querySelector(".card-list").scrollTo({ left: index * 320, behavior: 'smooth' });
-        });
+      new google.maps.Marker({
+        position: { lat: 25.034, lng: 121.564 },
+        map,
+        title: "Pink Beauty 美甲美睫",
+        icon: {
+          url: "https://github.com/tint0520/tint-town/blob/main/local_store.png?raw=true",
+          scaledSize: new google.maps.Size(32, 32)
+        }
       });
-
-      renderCards();
-    }
-
-    function renderCards() {
-      const cardList = document.getElementById("cardList");
-      cardList.innerHTML = stores.map((s, i) => `
-        <div class="store-card">
-          <h3>${s.name}</h3>
-          <p>${s.type}・${s.mode}</p>
-          <p>${s.district}</p>
-          <p>${s.distance}</p>
-          <p style="font-size:13px;color:#555">${s.desc}</p>
-          <div class="store-actions">
-            <a href="${s.ig}">IG</a>
-            <a href="${s.line}">LINE</a>
-            <a href="${s.nav}" target="_blank">導航</a>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function showMap() {
-      alert("地圖中心回到目前位置 demo 中");
     }
   </script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBLCB3EKFwsIqPwEEL_hxL7zluVpnzcCNM&callback=initMap"></script>
 </body>
 </html>
